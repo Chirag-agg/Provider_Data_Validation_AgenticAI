@@ -1,0 +1,85 @@
+{
+  "providers": [
+    {
+      "npi": "1029384756",
+      "name": "Dr Aarav Mehta",
+      "specialty": "Cardiology",
+      "phone": "+918123456789",
+      "address": "New Life Care Hospital, Delhi",
+      "license_no": "DL-MED-2024-1234"
+    },
+    {
+      "npi": "9988776655",
+      "name": "Dr Shalini Rao",
+      "specialty": "Dermatology",
+      "phone": "+919876543210",
+      "address": "SkinGlow Clinic, Bangalore",
+      "license_no": "KA-MED-2022-7788"
+    },
+    {
+      "npi": "1122334455",
+      "name": "Dr Ritu Sharma",
+      "specialty": "Neurology",
+      "phone": "+919112233445",
+      "address": "Apollo Hospitals, Mumbai",
+      "license_no": "MH-MED-2021-5566"
+    },
+    {
+      "npi": "2233445566",
+      "name": "Dr Vikram Singh",
+      "specialty": "Orthopedics",
+      "phone": "+919223344556",
+      "address": "Fortis Hospital, Gurgaon",
+      "license_no": "HR-MED-2023-3344"
+    },
+    {
+      "npi": "3344556677",
+      "name": "Dr Priya Patel",
+      "specialty": "Pediatrics",
+      "phone": "+919334455667",
+      "address": "Max Healthcare, Noida",
+      "license_no": "UP-MED-2020-1122"
+    },
+    {
+      "npi": "4455667788",
+      "name": "Dr Anil Kumar",
+      "specialty": "Oncology",
+      "phone": "+919445566778",
+      "address": "Tata Memorial Hospital, Mumbai",
+      "license_no": "MH-MED-2019-9988"
+    },
+    {
+      "npi": "5566778899",
+      "name": "Dr Meera Reddy",
+      "specialty": "Gynecology",
+      "phone": "+919556677889",
+      "address": "AIIMS, New Delhi",
+      "license_no": "DL-MED-2022-7766"
+    },
+    {
+      "npi": "6677889900",
+      "name": "Dr Rajesh Iyer",
+      "specialty": "Psychiatry",
+      "phone": "+919667788990",
+      "address": "NIMHANS, Bangalore",
+      "license_no": "KA-MED-2021-5544"
+    },
+    {
+      "npi": "7788990011",
+      "name": "Dr Kavita Desai",
+      "specialty": "Ophthalmology",
+      "phone": "+919778899001",
+      "address": "Sankara Eye Care, Chennai",
+      "license_no": "TN-MED-2023-3322"
+    },
+    {
+      "npi": "8899001122",
+      "name": "Dr Suresh Nair",
+      "specialty": "Gastroenterology",
+      "phone": "+919889900112",
+      "address": "Manipal Hospitals, Bangalore",
+      "license_no": "KA-MED-2020-1100"
+    }
+  ]
+}
+

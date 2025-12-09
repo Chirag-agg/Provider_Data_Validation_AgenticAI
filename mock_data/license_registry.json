@@ -1,0 +1,85 @@
+{
+  "licenses": [
+    {
+      "license_no": "DL-MED-2024-1234",
+      "doctor_name": "Dr Aarav Mehta",
+      "status": "Active",
+      "issued_by": "Delhi Medical Council",
+      "valid_till": "2027-06-01",
+      "specialty": "Cardiology"
+    },
+    {
+      "license_no": "KA-MED-2022-7788",
+      "doctor_name": "Dr Shalini Rao",
+      "status": "Suspended",
+      "issued_by": "Karnataka Medical Council",
+      "valid_till": "2024-12-31",
+      "specialty": "Dermatology"
+    },
+    {
+      "license_no": "MH-MED-2021-5566",
+      "doctor_name": "Dr Ritu Sharma",
+      "status": "Active",
+      "issued_by": "Maharashtra Medical Council",
+      "valid_till": "2026-03-15",
+      "specialty": "Neurology"
+    },
+    {
+      "license_no": "HR-MED-2023-3344",
+      "doctor_name": "Dr Vikram Singh",
+      "status": "Active",
+      "issued_by": "Haryana Medical Council",
+      "valid_till": "2028-01-20",
+      "specialty": "Orthopedics"
+    },
+    {
+      "license_no": "UP-MED-2020-1122",
+      "doctor_name": "Dr Priya Patel",
+      "status": "Active",
+      "issued_by": "Uttar Pradesh Medical Council",
+      "valid_till": "2025-11-30",
+      "specialty": "Pediatrics"
+    },
+    {
+      "license_no": "MH-MED-2019-9988",
+      "doctor_name": "Dr Anil Kumar",
+      "status": "Active",
+      "issued_by": "Maharashtra Medical Council",
+      "valid_till": "2024-09-10",
+      "specialty": "Oncology"
+    },
+    {
+      "license_no": "DL-MED-2022-7766",
+      "doctor_name": "Dr Meera Reddy",
+      "status": "Active",
+      "issued_by": "Delhi Medical Council",
+      "valid_till": "2027-05-12",
+      "specialty": "Gynecology"
+    },
+    {
+      "license_no": "KA-MED-2021-5544",
+      "doctor_name": "Dr Rajesh Iyer",
+      "status": "Active",
+      "issued_by": "Karnataka Medical Council",
+      "valid_till": "2026-08-25",
+      "specialty": "Psychiatry"
+    },
+    {
+      "license_no": "TN-MED-2023-3322",
+      "doctor_name": "Dr Kavita Desai",
+      "status": "Active",
+      "issued_by": "Tamil Nadu Medical Council",
+      "valid_till": "2028-02-14",
+      "specialty": "Ophthalmology"
+    },
+    {
+      "license_no": "KA-MED-2020-1100",
+      "doctor_name": "Dr Suresh Nair",
+      "status": "Revoked",
+      "issued_by": "Karnataka Medical Council",
+      "valid_till": "2023-12-31",
+      "specialty": "Gastroenterology"
+    }
+  ]
+}
+

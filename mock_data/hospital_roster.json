@@ -1,0 +1,161 @@
+{
+  "hospitals": [
+    {
+      "hospital_name": "New Life Care Hospital",
+      "location": "Delhi",
+      "doctors": [
+        {
+          "name": "Dr Aarav Mehta",
+          "specialty": "Cardiologist",
+          "phone": "+918123456789",
+          "department": "Cardiology",
+          "experience_years": 12,
+          "designation": "Senior Consultant"
+        },
+        {
+          "name": "Dr Ritu Sharma",
+          "specialty": "Neurologist",
+          "phone": "+919112233445",
+          "department": "Neurology",
+          "experience_years": 9,
+          "designation": "Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Apollo Hospitals",
+      "location": "Mumbai",
+      "doctors": [
+        {
+          "name": "Dr Ritu Sharma",
+          "specialty": "Neurologist",
+          "phone": "+919112233445",
+          "department": "Neurology",
+          "experience_years": 9,
+          "designation": "Senior Consultant"
+        },
+        {
+          "name": "Dr Anil Kumar",
+          "specialty": "Oncologist",
+          "phone": "+919445566778",
+          "department": "Oncology",
+          "experience_years": 15,
+          "designation": "Head of Department"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Fortis Hospital",
+      "location": "Gurgaon",
+      "doctors": [
+        {
+          "name": "Dr Vikram Singh",
+          "specialty": "Orthopedic Surgeon",
+          "phone": "+919223344556",
+          "department": "Orthopedics",
+          "experience_years": 11,
+          "designation": "Senior Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Max Healthcare",
+      "location": "Noida",
+      "doctors": [
+        {
+          "name": "Dr Priya Patel",
+          "specialty": "Pediatrician",
+          "phone": "+919334455667",
+          "department": "Pediatrics",
+          "experience_years": 8,
+          "designation": "Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Tata Memorial Hospital",
+      "location": "Mumbai",
+      "doctors": [
+        {
+          "name": "Dr Anil Kumar",
+          "specialty": "Oncologist",
+          "phone": "+919445566778",
+          "department": "Oncology",
+          "experience_years": 15,
+          "designation": "Senior Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "AIIMS",
+      "location": "New Delhi",
+      "doctors": [
+        {
+          "name": "Dr Meera Reddy",
+          "specialty": "Gynecologist",
+          "phone": "+919556677889",
+          "department": "Gynecology",
+          "experience_years": 13,
+          "designation": "Professor"
+        }
+      ]
+    },
+    {
+      "hospital_name": "NIMHANS",
+      "location": "Bangalore",
+      "doctors": [
+        {
+          "name": "Dr Rajesh Iyer",
+          "specialty": "Psychiatrist",
+          "phone": "+919667788990",
+          "department": "Psychiatry",
+          "experience_years": 10,
+          "designation": "Associate Professor"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Sankara Eye Care",
+      "location": "Chennai",
+      "doctors": [
+        {
+          "name": "Dr Kavita Desai",
+          "specialty": "Ophthalmologist",
+          "phone": "+919778899001",
+          "department": "Ophthalmology",
+          "experience_years": 7,
+          "designation": "Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "Manipal Hospitals",
+      "location": "Bangalore",
+      "doctors": [
+        {
+          "name": "Dr Suresh Nair",
+          "specialty": "Gastroenterologist",
+          "phone": "+919889900112",
+          "department": "Gastroenterology",
+          "experience_years": 14,
+          "designation": "Senior Consultant"
+        }
+      ]
+    },
+    {
+      "hospital_name": "SkinGlow Clinic",
+      "location": "Bangalore",
+      "doctors": [
+        {
+          "name": "Dr Shalini Rao",
+          "specialty": "Dermatologist",
+          "phone": "+919876543210",
+          "department": "Dermatology",
+          "experience_years": 6,
+          "designation": "Consultant"
+        }
+      ]
+    }
+  ]
+}
+

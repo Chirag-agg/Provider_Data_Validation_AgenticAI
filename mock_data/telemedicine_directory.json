@@ -1,0 +1,115 @@
+{
+  "directory": [
+    {
+      "name": "Dr Aarav Mehta",
+      "specialty": "Cardiologist",
+      "location": "Delhi",
+      "phone": "+918123456789",
+      "verified": true,
+      "platform": "Practo",
+      "rating": 4.6,
+      "consultation_fee": 800,
+      "years_experience": 12
+    },
+    {
+      "name": "Dr Shalini Rao",
+      "specialty": "Dermatologist",
+      "location": "Bangalore",
+      "phone": "+919876543210",
+      "verified": false,
+      "platform": "Lybrate",
+      "rating": 4.2,
+      "consultation_fee": 600,
+      "years_experience": 6
+    },
+    {
+      "name": "Dr Ritu Sharma",
+      "specialty": "Neurologist",
+      "location": "Mumbai",
+      "phone": "+919112233445",
+      "verified": true,
+      "platform": "Practo",
+      "rating": 4.7,
+      "consultation_fee": 1200,
+      "years_experience": 9
+    },
+    {
+      "name": "Dr Vikram Singh",
+      "specialty": "Orthopedic Surgeon",
+      "location": "Gurgaon",
+      "phone": "+919223344556",
+      "verified": true,
+      "platform": "1mg",
+      "rating": 4.5,
+      "consultation_fee": 1000,
+      "years_experience": 11
+    },
+    {
+      "name": "Dr Priya Patel",
+      "specialty": "Pediatrician",
+      "location": "Noida",
+      "phone": "+919334455667",
+      "verified": true,
+      "platform": "Practo",
+      "rating": 4.8,
+      "consultation_fee": 700,
+      "years_experience": 8
+    },
+    {
+      "name": "Dr Anil Kumar",
+      "specialty": "Oncologist",
+      "location": "Mumbai",
+      "phone": "+919445566778",
+      "verified": true,
+      "platform": "Zocdoc",
+      "rating": 4.9,
+      "consultation_fee": 2000,
+      "years_experience": 15
+    },
+    {
+      "name": "Dr Meera Reddy",
+      "specialty": "Gynecologist",
+      "location": "New Delhi",
+      "phone": "+919556677889",
+      "verified": true,
+      "platform": "Practo",
+      "rating": 4.7,
+      "consultation_fee": 900,
+      "years_experience": 13
+    },
+    {
+      "name": "Dr Rajesh Iyer",
+      "specialty": "Psychiatrist",
+      "location": "Bangalore",
+      "phone": "+919667788990",
+      "verified": true,
+      "platform": "Lybrate",
+      "rating": 4.6,
+      "consultation_fee": 1100,
+      "years_experience": 10
+    },
+    {
+      "name": "Dr Kavita Desai",
+      "specialty": "Ophthalmologist",
+      "location": "Chennai",
+      "phone": "+919778899001",
+      "verified": true,
+      "platform": "Practo",
+      "rating": 4.5,
+      "consultation_fee": 750,
+      "years_experience": 7
+    },
+    {
+      "name": "Dr Suresh Nair",
+      "specialty": "Gastroenterologist",
+      "location": "Bangalore",
+      "phone": "+919889900112",
+      "verified": false,
+      "platform": "1mg",
+      "rating": 4.4,
+      "consultation_fee": 950,
+      "years_experience": 14
+    }
+  ]
+}
+

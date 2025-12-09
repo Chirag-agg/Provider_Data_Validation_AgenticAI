@@ -1,0 +1,84 @@
+data_extraction_task:
+  description: |
+    You are given one input:
+    - provider_name (string)
+
+    STEP 1:
+    Load ALL registries using tools.
+
+    STEP 2:
+    Perform EXACT case-insensitive name matching.
+
+    STEP 3:
+    Return RAW MATCHED RECORDS ONLY in this format:
+
+    {
+      "npi": {},
+      "license": {},
+      "hospital": {},
+      "maps": {},
+      "clinic": {}
+    }
+
+    If no match exists in a source, return empty object {}.
+
+    ABSOLUTE RULES:
+    - No hallucinated values
+    - No confidence scores
+    - No reasoning
+    - No explanations
+    - No markdown
+    - Only return JSON
+
+  expected_output: >
+    RAW JSON ONLY.
+
+  agent: data_extraction_agent
+
+data_validation_task:
+  description: |
+    INPUT:
+    You will receive structured extracted data in this format:
+
+    {
+      "npi": {},
+      "license": {},
+      "hospital": {},
+      "maps": {},
+      "clinic": {}
+    }
+
+    You MUST compute:
+
+    - identity.match_score
+    - license.confidence
+    - location.confidence
+    - affiliation.confidence
+    - specialty.confidence
+    - overall_validation_confidence
+    - requires_contact_verification
+
+    You MUST return ONLY this JSON:
+
+    {
+      "identity": {"match_score": 0.00, "matched_sources": []},
+      "license": {"license_no": "", "status": "", "valid_till": "", "confidence": 0.00},
+      "location": {"input_phone": "", "verified_phone": "", "input_address": "", "verified_address": "", "confidence": 0.00, "needs_verification": false},
+      "affiliation": {"hospital": "", "department": "", "confidence": 0.00},
+      "specialty": {"input_specialty": "", "verified_specialty": "", "confidence": 0.00},
+      "issues": [],
+      "overall_validation_confidence": 0.00,
+      "requires_contact_verification": false
+    }
+
+    ABSOLUTE RULES:
+    - No hallucinations
+    - No markdown
+    - No explanations
+    - No extra keys
+    - No missing keys
+
+  expected_output: >
+    RAW JSON ONLY.
+
+  agent: data_validation_agent

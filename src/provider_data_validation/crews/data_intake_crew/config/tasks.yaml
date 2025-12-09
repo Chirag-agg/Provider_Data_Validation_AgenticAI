@@ -1,0 +1,51 @@
+intake_task:
+  description: |
+    You will receive provider data in one of two formats:
+    1. A structured JSON object containing provider fields, OR
+    2. A PDF file path pointing to a provider profile document.
+
+    Your responsibilities:
+    - Only use ExtractTextFromPDFTool if the input *explicitly* contains a field
+    named pdf_path AND it is a real PDF file path. 
+    NEVER guess or hallucinate a pdf_path. 
+    If no pdf_path is provided, DO NOT call the tool.
+    - Parse the text to detect:
+        * Provider name
+        * Phone number
+        * Address / clinic location
+        * Specialty
+        * License number
+    - Normalize and standardize:
+        * Remove whitespace noise
+        * Convert phone numbers into +91XXXXXXXXXX format
+        * Fix capitalization for names and specialties
+    - Identify fields that are missing, incomplete, or suspicious.
+
+    Return ONLY clean JSON with this exact structure:
+
+    {
+      "provider": {
+        "name": "...",
+        "phone": "...",
+        "address": "...",
+        "specialty": "...",
+        "license_no": "..."
+      },
+      "issues": [
+        // list of detected issues
+      ],
+      "needs_validation": [
+        // fields requiring external validation
+      ],
+      "needs_enrichment": [
+        // fields requiring enrichment from external data sources
+      ]
+    }
+
+    Do NOT add any commentary outside the JSON.
+
+  agent: intake_agent
+
+  expected_output: >
+    A clean JSON dictionary describing the extracted and normalized
+    provider data along with identified issues and routing flags.

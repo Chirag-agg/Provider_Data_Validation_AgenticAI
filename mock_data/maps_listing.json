@@ -1,0 +1,115 @@
+{
+  "listings": [
+    {
+      "place_id": "place_001",
+      "name": "New Life Care Hospital",
+      "formatted_address": "D-55 Sector 3, Rohini, Delhi 110085",
+      "phone": "+918123456789",
+      "rating": 4.5,
+      "verified": true,
+      "types": ["hospital", "clinic"],
+      "hours": "Open 24 hours",
+      "website": "https://newlifecare.com"
+    },
+    {
+      "place_id": "place_002",
+      "name": "SkinGlow Clinic",
+      "formatted_address": "MG Road, Bangalore 560001",
+      "phone": "+919876543210",
+      "rating": 4.2,
+      "verified": true,
+      "types": ["clinic", "dermatology"],
+      "hours": "10AM – 7PM",
+      "website": "https://skinglowclinic.in"
+    },
+    {
+      "place_id": "place_003",
+      "name": "Apollo Hospitals",
+      "formatted_address": "Bandra Kurla Complex, Mumbai 400051",
+      "phone": "+919112233445",
+      "rating": 4.7,
+      "verified": true,
+      "types": ["hospital", "medical_center"],
+      "hours": "Open 24 hours",
+      "website": "https://apollohospitals.com"
+    },
+    {
+      "place_id": "place_004",
+      "name": "Fortis Hospital",
+      "formatted_address": "Sector 44, Gurgaon 122002",
+      "phone": "+919223344556",
+      "rating": 4.4,
+      "verified": true,
+      "types": ["hospital", "emergency_room"],
+      "hours": "Open 24 hours",
+      "website": "https://fortishealthcare.com"
+    },
+    {
+      "place_id": "place_005",
+      "name": "Max Healthcare",
+      "formatted_address": "Sector 19, Noida 201301",
+      "phone": "+919334455667",
+      "rating": 4.6,
+      "verified": true,
+      "types": ["hospital", "pediatrician"],
+      "hours": "Open 24 hours",
+      "website": "https://maxhealthcare.in"
+    },
+    {
+      "place_id": "place_006",
+      "name": "Tata Memorial Hospital",
+      "formatted_address": "Parel, Mumbai 400012",
+      "phone": "+919445566778",
+      "rating": 4.8,
+      "verified": true,
+      "types": ["hospital", "cancer_treatment"],
+      "hours": "Open 24 hours",
+      "website": "https://tmc.gov.in"
+    },
+    {
+      "place_id": "place_007",
+      "name": "AIIMS",
+      "formatted_address": "Ansari Nagar, New Delhi 110029",
+      "phone": "+919556677889",
+      "rating": 4.9,
+      "verified": true,
+      "types": ["hospital", "medical_school"],
+      "hours": "Open 24 hours",
+      "website": "https://aiims.edu"
+    },
+    {
+      "place_id": "place_008",
+      "name": "NIMHANS",
+      "formatted_address": "Hosur Road, Bangalore 560029",
+      "phone": "+919667788990",
+      "rating": 4.7,
+      "verified": true,
+      "types": ["hospital", "mental_health"],
+      "hours": "Open 24 hours",
+      "website": "https://nimhans.ac.in"
+    },
+    {
+      "place_id": "place_009",
+      "name": "Sankara Eye Care",
+      "formatted_address": "Anna Nagar, Chennai 600040",
+      "phone": "+919778899001",
+      "rating": 4.5,
+      "verified": true,
+      "types": ["hospital", "eye_care"],
+      "hours": "8AM – 8PM",
+      "website": "https://sankaraeye.com"
+    },
+    {
+      "place_id": "place_010",
+      "name": "Manipal Hospitals",
+      "formatted_address": "Old Airport Road, Bangalore 560017",
+      "phone": "+919889900112",
+      "rating": 4.6,
+      "verified": true,
+      "types": ["hospital", "gastroenterology"],
+      "hours": "Open 24 hours",
+      "website": "https://manipalhospitals.com"
+    }
+  ]
+}
+

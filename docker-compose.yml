@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Ollama LLM Service (GPU optional)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - provider_network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3.1:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./mock_data:/app/mock_data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - provider_network
+    command: python -m uvicorn src.provider_data_validation.api:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend (optional - for development)
+  frontend:
+    build:
+      context: ./external_frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - provider_network
+    volumes:
+      - ./external_frontend/src:/app/src
+
+  # Redis for task queue (optional - for future async tasks)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - provider_network
+
+volumes:
+  ollama_data:
+  redis_data:
+
+
+networks:
+  provider_network:
+    driver: bridge
