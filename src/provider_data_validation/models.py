@@ -13,9 +13,10 @@ class ConfidenceScores(BaseModel):
     """Confidence scores for different validation aspects."""
     identity_match: float = Field(..., ge=0, le=1, description="Identity match confidence (0-1)")
     license_validity: float = Field(..., ge=0, le=1, description="License validity confidence (0-1)")
-    location_verified: float = Field(..., ge=0, le=1, description="Location verification confidence (0-1)")
+    contact_info_accuracy: float = Field(..., ge=0, le=1, description="Contact info accuracy confidence (0-1)")
     hospital_affiliation: float = Field(..., ge=0, le=1, description="Hospital affiliation confidence (0-1)")
-    specialty_verified: float = Field(..., ge=0, le=1, description="Specialty verification confidence (0-1)")
+    specialty_verification: float = Field(..., ge=0, le=1, description="Specialty verification confidence (0-1)")
+    data_freshness: float = Field(..., ge=0, le=1, description="Data freshness confidence (0-1)")
     overall_confidence: float = Field(..., ge=0, le=1, description="Overall validation confidence (0-1)")
 
 

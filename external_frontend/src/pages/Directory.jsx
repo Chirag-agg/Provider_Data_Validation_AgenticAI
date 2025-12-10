@@ -16,22 +16,34 @@ const Directory = () => {
 
     const specialties = ['Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Oncology', 'General Practice'];
 
-    // Mock providers data
-    const mockProviders = [
-        { id: 1, name: 'Dr. Sarah Johnson', specialty: 'Cardiology', phone: '(555) 123-4567', address: '123 Medical Blvd', confidence: 98, status: 'Verified' },
-        { id: 2, name: 'Dr. Michael Chen', specialty: 'Neurology', phone: '(555) 234-5678', address: '456 Health Ave', confidence: 85, status: 'Needs Review' },
-        { id: 3, name: 'Dr. Emily Rodriguez', specialty: 'Dermatology', phone: '(555) 345-6789', address: '789 Wellness St', confidence: 92, status: 'Auto-Updated' },
-        { id: 4, name: 'Dr. James Wilson', specialty: 'General Practice', phone: '(555) 456-7890', address: '321 Care Lane', confidence: 95, status: 'Verified' },
-        { id: 5, name: 'Dr. Lisa Anderson', specialty: 'Pediatrics', phone: '(555) 567-8901', address: '654 Health Circle', confidence: 88, status: 'Needs Review' },
-    ];
-
     useEffect(() => {
         fetchProviders();
     }, [search, statusFilter]);
 
     const fetchProviders = async () => {
         try {
-            let filtered = mockProviders;
+            // Load validated providers from localStorage
+            const storedResults = localStorage.getItem('validationResults');
+            let allProviders = [];
+
+            if (storedResults) {
+                const results = JSON.parse(storedResults);
+                // Convert validation results to provider format
+                allProviders = results.map((result, index) => ({
+                    id: result.provider_id || `provider-${index + 1}`,
+                    name: result.provider_name,
+                    specialty: result.verified_specialty || 'Unknown',
+                    phone: result.verified_phone || 'N/A',
+                    address: result.verified_address || 'N/A',
+                    confidence: Math.round(result.confidence_scores.overall_confidence * 100),
+                    status: result.validation_status === 'VERIFIED' ? 'Verified' :
+                        result.validation_status === 'PARTIALLY_VERIFIED' ? 'Needs Review' :
+                            result.validation_status === 'FLAGGED' ? 'Needs Review' :
+                                'Auto-Updated'
+                }));
+            }
+
+            let filtered = allProviders;
 
             if (search) {
                 filtered = filtered.filter(p =>
@@ -47,7 +59,7 @@ const Directory = () => {
             setProviders(filtered);
 
             // Animate rows in
-            if (tableRef.current) {
+            if (tableRef.current && filtered.length > 0) {
                 gsap.fromTo(tableRef.current.children,
                     { y: 20, opacity: 0 },
                     { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out', clearProps: 'all' }
@@ -178,7 +190,7 @@ const Directory = () => {
                                         <img src="/provider-icon.png" alt="" className="w-10 h-10 rounded-full border border-white/10 bg-white/5 p-1" />
                                         <div>
                                             <div className="font-medium text-white text-lg">{provider.name}</div>
-                                            <div className="text-sm text-slate-500">ID: {provider.id.slice(0, 8)}</div>
+                                            <div className="text-sm text-slate-500">ID: {String(provider.id).padStart(8, '0')}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -195,11 +207,11 @@ const Directory = () => {
                                     <div className="flex items-center gap-2">
                                         <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                className={`h-full rounded-full ${provider.confidenceScore > 80 ? 'bg-green-500' : provider.confidenceScore > 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                style={{ width: `${provider.confidenceScore}%` }}
+                                                className={`h-full rounded-full ${provider.confidence > 80 ? 'bg-green-500' : provider.confidence > 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                style={{ width: `${provider.confidence}%` }}
                                             />
                                         </div>
-                                        <span className="text-sm font-medium">{provider.confidenceScore}%</span>
+                                        <span className="text-sm font-medium">{provider.confidence}%</span>
                                     </div>
                                 </td>
                                 <td className="p-4">

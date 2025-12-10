@@ -164,185 +164,158 @@ class ValidationService:
     @classmethod
     def validate_provider(cls, provider: ProviderInput) -> ValidationResult:
         """
-        Validate a single provider against all data sources.
+        Validate a single provider against all data sources using CrewAI.
         Returns comprehensive validation result with confidence scores.
         """
         start_time = time.time()
         provider_id = str(uuid.uuid4())
         
-        # Search all data sources
-        npi_match = cls._search_npi_registry(provider.provider_name, provider.phone)
-        license_match = cls._search_license_registry(provider.provider_name, provider.license_no)
-        hospital_match = cls._search_hospital_roster(provider.provider_name)
-        maps_match = cls._search_maps_listing(provider.provider_name)
-        clinic_match = cls._extract_from_clinic_website(provider.provider_name)
-        
-        # Track sources
-        sources_checked = ["npi", "license", "hospital", "maps", "clinic"]
-        sources_matched = []
-        
-        if npi_match:
-            sources_matched.append("npi")
-        if license_match:
-            sources_matched.append("license")
-        if hospital_match:
-            sources_matched.append("hospital")
-        if maps_match:
-            sources_matched.append("maps")
-        if clinic_match:
-            sources_matched.append("clinic")
-        
-        # Calculate confidence scores
-        match_score = len(sources_matched) / len(sources_checked)
-        
-        # License confidence
-        license_confidence = 0.0
-        license_info = None
-        if license_match:
-            license_info = LicenseInfo(
-                license_number=license_match.get("license_number"),
-                status=license_match.get("status"),
-                specialty=license_match.get("specialty"),
-                expiration_date=license_match.get("expiration_date"),
-                issuing_body=license_match.get("issuing_body")
+        # Import CrewAI validation functions
+        try:
+            import sys
+            crew_path = cls.BASE_PATH / "src" / "provider_data_validation" / "crews" / "data_validation_crew"
+            sys.path.insert(0, str(crew_path.parent.parent))
+            
+            from crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
+            
+            # Extract data from all sources using just the provider name
+            extracted_data = extract_provider_data(provider.provider_name)
+            
+            # Validate the extracted data
+            validation_result = validate_provider_data(extracted_data)
+            
+            # Convert CrewAI result to our ValidationResult format
+            npi_data = extracted_data.get("npi", {})
+            license_data = extracted_data.get("license", {})
+            hospital_data = extracted_data.get("hospital", {})
+            maps_data = extracted_data.get("maps", {})
+            clinic_data = extracted_data.get("clinic", {})
+            
+            # Extract verified information
+            verified_phone = npi_data.get("phone") or maps_data.get("phone") or clinic_data.get("phone")
+            verified_address = npi_data.get("address") or maps_data.get("address") or clinic_data.get("address")
+            verified_specialty = npi_data.get("specialty") or clinic_data.get("specialty")
+            
+            # Build confidence scores
+            confidence_scores = ConfidenceScores(
+                identity_match=validation_result["identity"]["match_score"],
+                license_validity=validation_result["license"]["confidence"],
+                contact_info_accuracy=validation_result["location"]["confidence"],
+                hospital_affiliation=validation_result["affiliation"]["confidence"],
+                specialty_verification=validation_result["specialty"]["confidence"],
+                data_freshness=0.9,  # Mock data is relatively fresh
+                overall_confidence=validation_result["overall_validation_confidence"]
             )
-            license_confidence = 1.0 if license_match.get("status") == "Active" else 0.5
-        
-        # Location confidence
-        location_confidence = 0.0
-        verified_phone = None
-        verified_address = None
-        
-        if npi_match and clinic_match:
-            if npi_match.get("phone") == clinic_match.get("phone"):
-                location_confidence += 0.5
-                verified_phone = npi_match.get("phone")
-            if npi_match.get("address") and clinic_match.get("address"):
-                if npi_match.get("address").lower() in clinic_match.get("address", "").lower():
-                    location_confidence += 0.5
-                    verified_address = clinic_match.get("address")
-        elif npi_match:
-            location_confidence = 0.5
-            verified_phone = npi_match.get("phone")
-            verified_address = npi_match.get("address")
-        
-        # Hospital affiliation
-        hospital_affiliation = None
-        affiliation_confidence = 0.0
-        if hospital_match:
-            hospital_affiliation = HospitalAffiliation(
-                hospital_name=hospital_match.get("hospital_name"),
-                department=hospital_match.get("department"),
-                position=hospital_match.get("position")
+            
+            # Build license info
+            license_info = None
+            if license_data:
+                license_info = LicenseInfo(
+                    license_number=license_data.get("license_no"),
+                    status=license_data.get("status"),
+                    specialty=license_data.get("specialty"),
+                    expiration_date=license_data.get("valid_till"),
+                    issuing_body=license_data.get("issuing_authority")
+                )
+            
+            # Build hospital affiliation
+            hospital_affiliation = None
+            if hospital_data:
+                hospital_affiliation = HospitalAffiliation(
+                    hospital_name=hospital_data.get("hospital_name"),
+                    department=hospital_data.get("department"),
+                    position=hospital_data.get("position")
+                )
+            
+            # Determine validation status
+            match_score = validation_result["identity"]["match_score"]
+            if match_score >= 0.6:
+                validation_status = "VERIFIED"
+            elif match_score >= 0.4:
+                validation_status = "PARTIALLY_VERIFIED"
+            else:
+                validation_status = "UNVERIFIED"
+            
+            # Check for critical issues
+            if license_data and license_data.get("status") != "Active":
+                validation_status = "FLAGGED"
+            
+            # Build issues list
+            issues: List[ValidationIssue] = []
+            for issue_text in validation_result.get("issues", []):
+                severity = "HIGH" if "license" in issue_text.lower() else "MEDIUM"
+                issues.append(ValidationIssue(
+                    issue=issue_text,
+                    severity=severity,
+                    source="validation_crew",
+                    recommendation="Review and verify manually"
+                ))
+            
+            processing_time_ms = (time.time() - start_time) * 1000
+            
+            return ValidationResult(
+                provider_id=provider_id,
+                input_data=provider.model_dump(),
+                provider_name=provider.provider_name,
+                npi_number=npi_data.get("npi") if npi_data else None,
+                verified_phone=verified_phone,
+                verified_address=verified_address,
+                verified_specialty=verified_specialty,
+                license_info=license_info,
+                hospital_affiliation=hospital_affiliation,
+                confidence_scores=confidence_scores,
+                sources_checked=["npi", "license", "hospital", "maps", "clinic"],
+                sources_matched=validation_result["identity"]["matched_sources"],
+                validation_status=validation_status,
+                issues=issues,
+                risk_flags=[],
+                requires_manual_review=validation_status == "FLAGGED",
+                requires_contact_verification=validation_result.get("requires_contact_verification", False),
+                next_steps=[],
+                processing_time_ms=processing_time_ms
             )
-            affiliation_confidence = 1.0
-        
-        # Specialty verification
-        specialty_confidence = 0.0
-        verified_specialty = None
-        if clinic_match and clinic_match.get("specialty"):
-            verified_specialty = clinic_match.get("specialty")
-            specialty_confidence = 1.0
-        elif license_match and license_match.get("specialty"):
-            verified_specialty = license_match.get("specialty")
-            specialty_confidence = 0.8
-        
-        # Calculate overall confidence
-        confidence_scores = ConfidenceScores(
-            identity_match=match_score,
-            license_validity=license_confidence,
-            location_verified=min(location_confidence, 1.0),
-            hospital_affiliation=affiliation_confidence,
-            specialty_verified=specialty_confidence,
-            overall_confidence=(match_score + license_confidence + min(location_confidence, 1.0) + affiliation_confidence + specialty_confidence) / 5.0
-        )
-        
-        # Determine validation status and issues
-        validation_status = "UNVERIFIED"
-        issues: List[ValidationIssue] = []
-        risk_flags: List[RiskFlag] = []
-        
-        if len(sources_matched) >= 3:
-            validation_status = "VERIFIED"
-        elif len(sources_matched) >= 2:
-            validation_status = "PARTIALLY_VERIFIED"
-        
-        # Check for issues
-        if not license_match:
-            issues.append(ValidationIssue(
-                issue="No license found",
-                severity="HIGH",
-                source="license_registry",
-                recommendation="Contact licensing board for verification"
-            ))
-        elif license_match.get("status") != "Active":
-            issues.append(ValidationIssue(
-                issue=f"License status is {license_match.get('status')}",
-                severity="CRITICAL",
-                source="license_registry",
-                recommendation="Provider license may be invalid or expired"
-            ))
-            risk_flags.append(RiskFlag(
-                flag="INACTIVE_LICENSE",
-                severity="CRITICAL",
-                description="Provider's license is not active"
-            ))
-            validation_status = "FLAGGED"
-        
-        if location_confidence < 0.5:
-            issues.append(ValidationIssue(
-                issue="Location information could not be verified",
-                severity="MEDIUM",
-                source="maps_listing",
-                recommendation="Contact provider for address verification"
-            ))
-        
-        if not hospital_match:
-            issues.append(ValidationIssue(
-                issue="No hospital affiliation found",
-                severity="LOW",
-                source="hospital_roster",
-                recommendation="Verify hospital affiliation directly"
-            ))
-        
-        # Determine next steps
-        next_steps = []
-        requires_manual_review = False
-        requires_contact_verification = False
-        
-        if validation_status == "FLAGGED":
-            requires_manual_review = True
-            next_steps.append("Manual review required due to license issues")
-        elif validation_status == "UNVERIFIED":
-            requires_contact_verification = True
-            next_steps.append("Contact provider for identity verification")
-        elif len(sources_matched) < 3:
-            requires_contact_verification = True
-            next_steps.append("Additional verification recommended")
-        
-        processing_time_ms = (time.time() - start_time) * 1000
-        
-        return ValidationResult(
-            provider_id=provider_id,
-            input_data=provider.model_dump(),
-            provider_name=provider.provider_name,
-            npi_number=npi_match.get("npi") if npi_match else None,
-            verified_phone=verified_phone,
-            verified_address=verified_address,
-            verified_specialty=verified_specialty,
-            license_info=license_info,
-            hospital_affiliation=hospital_affiliation,
-            confidence_scores=confidence_scores,
-            sources_checked=sources_checked,
-            sources_matched=sources_matched,
-            validation_status=validation_status,
-            issues=issues,
-            risk_flags=risk_flags,
-            requires_manual_review=requires_manual_review,
-            requires_contact_verification=requires_contact_verification,
-            next_steps=next_steps,
-            processing_time_ms=processing_time_ms
-        )
+            
+        except Exception as e:
+            print(f"Error in CrewAI validation: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Fallback to basic validation
+            processing_time_ms = (time.time() - start_time) * 1000
+            return ValidationResult(
+                provider_id=provider_id,
+                input_data=provider.model_dump(),
+                provider_name=provider.provider_name,
+                npi_number=None,
+                verified_phone=None,
+                verified_address=None,
+                verified_specialty=None,
+                license_info=None,
+                hospital_affiliation=None,
+                confidence_scores=ConfidenceScores(
+                    identity_match=0.0,
+                    license_validity=0.0,
+                    contact_info_accuracy=0.0,
+                    hospital_affiliation=0.0,
+                    specialty_verification=0.0,
+                    data_freshness=0.0,
+                    overall_confidence=0.0
+                ),
+                sources_checked=["npi", "license", "hospital", "maps", "clinic"],
+                sources_matched=[],
+                validation_status="UNVERIFIED",
+                issues=[ValidationIssue(
+                    issue=f"Validation error: {str(e)}",
+                    severity="CRITICAL",
+                    source="system",
+                    recommendation="Check system logs"
+                )],
+                risk_flags=[],
+                requires_manual_review=True,
+                requires_contact_verification=True,
+                next_steps=["System error - manual review required"],
+                processing_time_ms=processing_time_ms
+            )
     
     @classmethod
     async def validate_batch(cls, providers: List[ProviderInput], batch_id: str) -> BatchValidationResponse:

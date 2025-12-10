@@ -30,8 +30,50 @@ def validate_provider_data(extracted_data: dict) -> dict:
     if maps: matched_sources.append("maps")
     if clinic: matched_sources.append("clinic")
     
-    # Compute match score (0-1 based on sources found)
-    match_score = sources_found / 5.0
+    # NEW: Compare data across sources for quality score
+    data_consistency_score = 1.0
+    discrepancies = []
+    
+    # Check phone consistency across sources
+    phones = []
+    if npi and npi.get("phone"): phones.append(("npi", npi["phone"].replace(" ", "").replace("-", "")))
+    if maps and maps.get("phone"): phones.append(("maps", maps["phone"].replace(" ", "").replace("-", "")))
+    if clinic and clinic.get("phone"): phones.append(("clinic", clinic["phone"].replace(" ", "").replace("-", "")))
+    
+    if len(phones) > 1:
+        unique_phones = set(p[1] for p in phones)
+        if len(unique_phones) > 1:
+            data_consistency_score -= 0.2
+            discrepancies.append(f"Phone mismatch: {phones}")
+    
+    # Check specialty consistency
+    specialties = []
+    if npi and npi.get("specialty"): specialties.append(("npi", npi["specialty"].lower()))
+    if license_data and license_data.get("specialty"): specialties.append(("license", license_data["specialty"].lower()))
+    if clinic and clinic.get("specialty"): specialties.append(("clinic", clinic["specialty"].lower()))
+    
+    if len(specialties) > 1:
+        unique_specialties = set(s[1] for s in specialties)
+        if len(unique_specialties) > 1:
+            data_consistency_score -= 0.25
+            discrepancies.append(f"Specialty mismatch: {specialties}")
+    
+    # Check address/location consistency
+    locations = []
+    if npi and npi.get("address"): locations.append(("npi", npi["address"].lower()))
+    if maps and maps.get("address"): locations.append(("maps", maps["address"].lower()))
+    if clinic and clinic.get("address"): locations.append(("clinic", clinic["address"].lower()))
+    
+    if len(locations) > 1:
+        # Check if addresses share common parts (city/state)
+        all_same = all(locations[0][1] in loc[1] or loc[1] in locations[0][1] for loc in locations)
+        if not all_same:
+            data_consistency_score -= 0.15
+            discrepancies.append(f"Location mismatch")
+    
+    # Final match score combines source coverage AND data quality
+    source_coverage = sources_found / 5.0
+    match_score = source_coverage * max(data_consistency_score, 0.3)  # Min 30% even with issues
     
     # License confidence
     license_confidence = 1.0 if license_data and license_data.get("status") == "Active" else 0.5 if license_data else 0.0
@@ -140,65 +182,112 @@ def validate_provider_data(extracted_data: dict) -> dict:
     }
 
 
+def _clean_name_for_matching(name: str) -> str:
+    """Remove titles and normalize name for better fuzzy matching."""
+    import re
+    # Remove common titles
+    name = re.sub(r'\b(dr\.?|doctor|md|phd|do)\b', '', name, flags=re.IGNORECASE)
+    # Remove extra whitespace and periods
+    name = re.sub(r'\.', '', name)
+    name = ' '.join(name.split())
+    return name.strip().lower()
+
+
+def _fuzzy_match_name(input_name: str, candidates: list[dict], name_field: str = "name", threshold: float = 0.7) -> dict | None:
+    """
+    Find best matching provider from candidates using fuzzy matching.
+    
+    Args:
+        input_name: Name to search for
+        candidates: List of provider dicts
+        name_field: Field name containing the provider name
+        threshold: Minimum similarity ratio (0.0-1.0)
+    
+    Returns:
+        Best matching provider dict if similarity >= threshold, else None
+    """
+    from difflib import SequenceMatcher
+    
+    cleaned_input = _clean_name_for_matching(input_name)
+    best_match = None
+    best_ratio = 0.0
+    
+    for candidate in candidates:
+        candidate_name = candidate.get(name_field, "")
+        if not candidate_name:
+            continue
+            
+        cleaned_candidate = _clean_name_for_matching(candidate_name)
+        
+        # Calculate similarity ratio
+        ratio = SequenceMatcher(None, cleaned_input, cleaned_candidate).ratio()
+        
+        if ratio > best_ratio:
+            best_ratio = ratio
+            best_match = candidate
+    
+    return best_match if best_ratio >= threshold else None
+
+
 # Helper function to extract provider records
 def extract_provider_data(provider_name: str) -> dict:
-    """Extract provider data from all registries with exact name matching."""
-    name_lower = provider_name.strip().lower()
+    """Extract provider data from all registries using fuzzy name matching."""
     
-    # NPI
+    # NPI - Use fuzzy matching
     npi_data = None
     with open(NPI_PATH, "r", encoding="utf-8") as f:
-        for p in json.load(f)["providers"]:
-            if p["name"].strip().lower() == name_lower:
-                npi_data = p
-                break
+        providers = json.load(f)["providers"]
+        npi_data = _fuzzy_match_name(provider_name, providers, "name")
     
-    # License
+    # License - Use fuzzy matching
     license_data = None
     with open(LICENSE_PATH, "r", encoding="utf-8") as f:
-        for l in json.load(f)["licenses"]:
-            if l["doctor_name"].strip().lower() == name_lower:
-                license_data = l
-                break
+        licenses = json.load(f)["licenses"]
+        license_data = _fuzzy_match_name(provider_name, licenses, "doctor_name")
     
-    # Hospital
+    # Hospital - Use fuzzy matching
     hospital_data = None
     with open(HOSPITAL_PATH, "r", encoding="utf-8") as f:
-        for h in json.load(f)["hospitals"]:
+        hospitals_json = json.load(f)["hospitals"]
+        # Flatten doctors from all hospitals
+        all_doctors = []
+        for h in hospitals_json:
             for d in h["doctors"]:
-                if d["name"].strip().lower() == name_lower:
-                    hospital_data = {"hospital_name": h["hospital_name"], **d}
-                    break
-            if hospital_data:
-                break
+                all_doctors.append({"hospital_name": h["hospital_name"], **d})
+        
+        hospital_data = _fuzzy_match_name(provider_name, all_doctors, "name")
     
-    # Maps
+    # Maps - Use fuzzy matching
     maps_data = None
     with open(MAPS_PATH, "r", encoding="utf-8") as f:
-        for m in json.load(f)["listings"]:
-            if m["name"].strip().lower() == name_lower or ("hospital_name" in m and m["hospital_name"].strip().lower() == name_lower):
-                maps_data = m
-                break
+        listings = json.load(f)["listings"]
+        maps_data = _fuzzy_match_name(provider_name, listings, "name")
     
-    # Clinic Website
+    # Clinic Website - Use fuzzy matching
     clinic_data = None
     with open(CLINIC_PATH, "r", encoding="utf-8") as f:
         soup = bs4.BeautifulSoup(f.read(), "html.parser")
+        # Extract all doctors
+        all_clinic_doctors = []
         for div in soup.find_all("div", class_="doctor"):
-            doc_name = div.find("h2").text.strip().lower()
-            if doc_name == name_lower:
-                details = {}
-                for p in div.find_all("p"):
+            doc_name = div.find("h2").text.strip()
+            details = {}
+            for p in div.find_all("p"):
+                try:
                     key, value = p.text.split(":", 1)
                     details[key.strip().lower()] = value.strip()
-                clinic_data = {
-                    "name": div.find("h2").text.strip(),
-                    "specialty": details.get("specialty"),
-                    "phone": details.get("phone"),
-                    "address": details.get("address"),
-                    "license_no": details.get("license no")
-                }
-                break
+                except:
+                    continue
+            
+            all_clinic_doctors.append({
+                "name": doc_name,
+                "specialty": details.get("specialty"),
+                "phone": details.get("phone"),
+                "address": details.get("address"),
+                "license_no": details.get("license no")
+            })
+        
+        clinic_data = _fuzzy_match_name(provider_name, all_clinic_doctors, "name")
     
     return {
         "npi": npi_data or {},
@@ -212,7 +301,7 @@ def extract_provider_data(provider_name: str) -> dict:
 # Extraction tool for agent
 class ExtractProviderTool(BaseTool):
     name: str = "extract_provider_records"
-    description: str = "Extract provider records from all registries with exact name matching."
+    description: str = "Extract provider records from all registries with fuzzy name matching."
     
     def _run(self, provider_name: str) -> dict:
         return extract_provider_data(provider_name)

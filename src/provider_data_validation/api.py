@@ -208,15 +208,20 @@ async def upload_file(file: UploadFile = File(...)):
         
     except HTTPException:
         raise
+    except ImportError as e:
+        # OCR dependencies not installed
+        error_msg = str(e)
+        if "pytesseract" in error_msg or "pdf2image" in error_msg:
+            error_msg = "OCR libraries not installed. The PDF appears to be scanned/handwritten. Install Tesseract OCR from https://github.com/UB-Mannheim/tesseract/wiki"
+        raise HTTPException(status_code=400, detail=error_msg)
+    except ValueError as e:
+        # OCR or extraction failed
+        raise HTTPException(status_code=400, detail=f"File processing failed: {str(e)}")
     except Exception as e:
-        return FileUploadResponse(
-            file_id="",
-            filename=file.filename,
-            file_type=FileProcessor.get_file_type(file.filename),
-            providers_extracted=0,
-            extraction_status="error",
-            extracted_providers=[]
-        )
+        # Generic error with details
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 @app.post("/upload/{file_id}/validate")

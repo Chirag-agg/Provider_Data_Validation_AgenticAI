@@ -1,4 +1,26 @@
+# Environment
 .env
+crewai-env/
+
+# Python
 __pycache__/
-lib/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
 .DS_Store
+.vscode/
+.idea/
+
+# Project-specific
+lib/
+logs/
+output/
+*.log
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

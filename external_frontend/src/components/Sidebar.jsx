@@ -29,9 +29,8 @@ const Sidebar = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Users, label: 'Directory', path: '/directory' },
     { icon: PlayCircle, label: 'Run Validation', path: '/validation' },
-    { icon: ClipboardList, label: 'Review Queue', path: '/review' },
+    { icon: Users, label: 'Directory', path: '/directory' },
     { icon: Activity, label: 'Activity Logs', path: '/logs' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];

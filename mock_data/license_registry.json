@@ -6,7 +6,8 @@
       "status": "Active",
       "issued_by": "Delhi Medical Council",
       "valid_till": "2027-06-01",
-      "specialty": "Cardiology"
+      "specialty": "Cardiology",
+      "phone": "+918123456790"
     },
     {
       "license_no": "KA-MED-2022-7788",
@@ -82,4 +83,3 @@
     }
   ]
 }
-

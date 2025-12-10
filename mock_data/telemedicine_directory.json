@@ -1,7 +1,7 @@
 {
   "directory": [
     {
-      "name": "Dr Aarav Mehta",
+      "name": "Dr. A. Mehta",
       "specialty": "Cardiologist",
       "location": "Delhi",
       "phone": "+918123456789",
@@ -14,7 +14,7 @@
     {
       "name": "Dr Shalini Rao",
       "specialty": "Dermatologist",
-      "location": "Bangalore",
+      "location": "Indiranagar, Bangalore 560038",
       "phone": "+919876543210",
       "verified": false,
       "platform": "Lybrate",
@@ -24,7 +24,7 @@
     },
     {
       "name": "Dr Ritu Sharma",
-      "specialty": "Neurologist",
+      "specialty": "Neuro-Rehabilitation Specialist",
       "location": "Mumbai",
       "phone": "+919112233445",
       "verified": true,
@@ -32,17 +32,6 @@
       "rating": 4.7,
       "consultation_fee": 1200,
       "years_experience": 9
-    },
-    {
-      "name": "Dr Vikram Singh",
-      "specialty": "Orthopedic Surgeon",
-      "location": "Gurgaon",
-      "phone": "+919223344556",
-      "verified": true,
-      "platform": "1mg",
-      "rating": 4.5,
-      "consultation_fee": 1000,
-      "years_experience": 11
     },
     {
       "name": "Dr Priya Patel",
@@ -112,4 +101,3 @@
     }
   ]
 }
-
