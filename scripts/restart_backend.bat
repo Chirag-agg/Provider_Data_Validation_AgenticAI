@@ -22,7 +22,15 @@ echo Starting in 3 seconds...
 timeout /t 3 /nobreak >nul
 
 REM Start backend using conda run (works without activating)
+
+REM Get script directory and navigate to project root  
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%.."
+
 start "Provider Data Validation API - CrewAI" cmd /k "conda run -n crewai-env python -m uvicorn src.provider_data_validation.api:app --reload --host 127.0.0.1 --port 8000"
+
+REM Return to script directory
+cd /d "%SCRIPT_DIR%"
 
 echo.
 echo [OK] Backend started with CrewAI support!

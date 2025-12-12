@@ -9,6 +9,7 @@ import ReviewQueue from './pages/ReviewQueue';
 import Logs from './pages/Logs';
 import Settings from './pages/Settings';
 import MapPage from './pages/MapPage';
+import DriftMonitoring from './pages/DriftMonitoring';
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                     <Route path="directory" element={<Directory />} />
                     <Route path="provider/:id" element={<ProviderDetail />} />
                     <Route path="validation" element={<Validation />} />
+                    <Route path="drift-monitoring" element={<DriftMonitoring />} />
                     <Route path="review" element={<ReviewQueue />} />
                     <Route path="logs" element={<Logs />} />
                     <Route path="settings" element={<Settings />} />

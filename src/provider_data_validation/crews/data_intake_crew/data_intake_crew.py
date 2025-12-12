@@ -1,7 +1,7 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 
-from tools.pdf_reader import ExtractTextFromPDFTool
+from ...tools.pdf_reader import ExtractTextFromPDFTool
 
 
 @CrewBase

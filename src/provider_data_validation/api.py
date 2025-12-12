@@ -297,26 +297,72 @@ async def test_webhook(webhook_url: str):
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
+    error_response = ErrorResponse(
+        error=exc.detail,
+        code="HTTP_ERROR",
+        details={"path": str(request.url.path)}
+    )
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(
-            error=exc.detail,
-            code="HTTP_ERROR",
-            details={"path": str(request.url.path)}
-        ).model_dump()
+        content=error_response.model_dump(mode='json')
     )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
+    error_response = ErrorResponse(
+        error=str(exc),
+        code="INTERNAL_ERROR",
+        details={"path": str(request.url.path)}
+    )
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse(
-            error=str(exc),
-            code="INTERNAL_ERROR",
-            details={"path": str(request.url.path)}
-        ).model_dump()
+        content=error_response.model_dump(mode='json')
     )
+
+
+# ==================== Drift Monitoring ====================
+
+@app.post("/drift-monitor")
+async def monitor_drift(provider_name: str):
+    """
+    Monitor credential drift for a provider by comparing current vs historical data.
+    """
+    try:
+        from .crews.drift_monitoring_crew import DriftMonitoringCrew
+        
+        # Create crew and pass provider_name as input
+        crew = DriftMonitoringCrew()
+        
+        # Kickoff the crew with the provider name as input
+        result = crew.crew().kickoff(inputs={"provider_name": provider_name})
+        
+        # Parse the result - crew returns a raw string
+        import json
+        import re
+        
+        # Convert result to string if it's not already
+        result_str = str(result.raw) if hasattr(result, 'raw') else str(result)
+        
+        # Clean up the string
+        # Remove markdown code fences
+        result_str = re.sub(r'```json\s*|\s*```', '', result_str)
+        # Replace double curly braces
+        result_str = result_str.replace('{{', '{').replace('}}', '}')
+        # Remove any leading/trailing whitespace
+        result_str = result_str.strip()
+        
+        # Parse as JSON
+        result_data = json.loads(result_str)
+        
+        return {
+            "success": True,
+            "data": result_data
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Drift monitoring failed: {str(e)}")
 
 
 # ==================== Root ====================
@@ -341,7 +387,8 @@ async def root():
             "batch_status": "GET /batch/{batch_id}",
             "upload_file": "POST /upload",
             "validate_file": "POST /upload/{file_id}/validate",
-            "get_provider": "GET /validate/{provider_id}"
+            "get_provider": "GET /validate/{provider_id}",
+            "drift_monitor": "POST /drift-monitor"
         }
     }
 
@@ -354,7 +401,7 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     
     uvicorn.run(
-        "api:app",
+        "provider_data_validation.api:app",
         host=host,
         port=port,
         reload=True

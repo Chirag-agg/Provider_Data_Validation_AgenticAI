@@ -31,7 +31,9 @@ const Sidebar = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: PlayCircle, label: 'Run Validation', path: '/validation' },
     { icon: Users, label: 'Directory', path: '/directory' },
-    { icon: Activity, label: 'Activity Logs', path: '/logs' },
+    { icon: Activity, label: 'Drift Monitoring', path: '/drift-monitoring' },
+    { icon: FileCheck, label: 'Manual Review', path: '/review' },
+    { icon: ClipboardList, label: 'Activity Logs', path: '/logs' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

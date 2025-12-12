@@ -29,7 +29,16 @@ echo.
 
 REM Start backend with conda environment
 echo [2/3] Starting Backend API (with CrewAI)...
+
+REM Get script directory and navigate to project root
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%.."
+
 start "Provider Validation API" cmd /k "conda run -n crewai-env python -m uvicorn src.provider_data_validation.api:app --reload --host 127.0.0.1 --port 8000"
+
+REM Return to script directory
+cd /d "%SCRIPT_DIR%"
+
 echo [OK] Backend starting...
 echo.
 
@@ -39,7 +48,15 @@ timeout /t 5 /nobreak >nul
 
 REM Start frontend
 echo [3/3] Starting Frontend...
-start "Provider Validation Frontend" cmd /k "cd /d %CD%\external_frontend & npm run dev"
+
+REM Get the frontend directory path
+set "FRONTEND_DIR=%SCRIPT_DIR%..\external_frontend"
+
+start "Provider Validation Frontend" cmd /k "cd /d %FRONTEND_DIR% & npm run dev"
+
+REM Return to script directory  
+cd /d "%SCRIPT_DIR%"
+
 echo [OK] Frontend starting...
 echo.
 

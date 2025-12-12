@@ -3,7 +3,7 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, task, crew
 
-from tools.twilio_tools import SendRealSMSTool, CallProviderRealTool
+from ...tools.twilio_tools import SendRealSMSTool, CallProviderRealTool
 
 
 @CrewBase

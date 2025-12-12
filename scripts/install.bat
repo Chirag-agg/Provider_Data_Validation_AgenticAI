@@ -53,17 +53,32 @@ echo.
 
 REM Install frontend dependencies
 echo [5/5] Installing frontend dependencies...
+
+REM Get the directory where this script is located
+set "SCRIPT_DIR=%~dp0"
+REM Navigate to project root (one level up from scripts)
+cd /d "%SCRIPT_DIR%.."
+
+if not exist external_frontend (
+    echo [ERROR] external_frontend directory not found!
+    cd /d "%SCRIPT_DIR%"
+    pause
+    exit /b 1
+)
+
 cd external_frontend
 if not exist node_modules (
     call npm install
     if errorlevel 1 (
         echo [ERROR] Failed to install npm packages
-        cd ..
+        cd /d "%SCRIPT_DIR%"
         pause
         exit /b 1
     )
 )
-cd ..
+
+REM Return to script directory
+cd /d "%SCRIPT_DIR%"
 echo [OK] Frontend dependencies installed
 echo.
 

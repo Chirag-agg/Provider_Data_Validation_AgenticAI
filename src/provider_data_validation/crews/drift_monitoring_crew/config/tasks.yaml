@@ -1,0 +1,73 @@
+drift_detection_task:
+  description: |
+    Provider to analyze: {provider_name}
+    
+    CRITICAL: You MUST use the compare_provider_data tool with provider_name: {provider_name}
+    
+    This tool will automatically:
+    - Load historical data
+    - Load current data  
+    - Compare them
+    - Return detected changes in JSON format
+    
+    DO NOT try to load or compare data manually.
+    DO NOT use load_historical_provider_data or load_current_provider_data directly.
+    
+    ONLY use: compare_provider_data with provider_name: {provider_name}
+    
+    Then return the exact JSON output from that tool.
+    
+    ABSOLUTE RULES:
+    - Call compare_provider_data ONCE with provider_name: {provider_name}
+    - Return the exact JSON it provides
+    - No markdown, no explanations
+    - Output MUST be valid JSON
+  
+  expected_output: >
+    JSON object with array of change descriptions from the compare_provider_data tool.
+  
+  agent: drift_detection_agent
+
+risk_assessment_task:
+  description: |
+    Provider being assessed: {provider_name}
+    
+    INPUT:
+    You will receive a list of detected changes from the previous task.
+    
+    STEP 1:
+    Analyze each change and assign risk points according to these rules:
+    - License status → Suspended/Revoked: +30
+    - Hospital affiliation removed/changed: +20
+    - Phone number updated: +15
+    - Address changed: +15
+    - Specialty changed: +10
+    - License expiring soon (within 6 months): +10
+    
+    STEP 2:
+    Sum all risk points, capped at maximum 100.
+    
+    STEP 3:
+    Return ONLY this JSON format:
+    
+    {{
+      "provider": "{provider_name}",
+      "changes_detected": [
+        "Hospital affiliation removed",
+        "Phone number updated"
+      ],
+      "risk_increase": 18
+    }}
+    
+    ABSOLUTE RULES:
+    - Use {provider_name} as the provider field value
+    - risk_increase must be an integer between 0-100
+    - changes_detected should be simplified descriptions (no before/after values)
+    - No markdown, no explanations
+    - Output MUST be valid JSON
+    - All three fields are required
+  
+  expected_output: >
+    JSON object with provider name, changes detected array, and risk_increase score.
+  
+  agent: risk_scoring_agent

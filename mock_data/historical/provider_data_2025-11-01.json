@@ -1,0 +1,65 @@
+{
+    "snapshot_date": "2025-11-01",
+    "providers": [
+        {
+            "name": "Dr Shalini Rao",
+            "license": {
+                "license_no": "KA-MED-2022-7788",
+                "status": "Active",
+                "issued_by": "Karnataka Medical Council",
+                "valid_till": "2024-12-31",
+                "specialty": "Dermatology"
+            },
+            "contact": {
+                "phone": "+919876543210",
+                "address": "Bangalore"
+            },
+            "affiliation": {
+                "hospital": "SkinGlow Clinic",
+                "location": "Bangalore",
+                "department": "Dermatology",
+                "designation": "Consultant"
+            }
+        },
+        {
+            "name": "Dr Aarav Mehta",
+            "license": {
+                "license_no": "DL-MED-2024-1234",
+                "status": "Active",
+                "issued_by": "Delhi Medical Council",
+                "valid_till": "2027-06-01",
+                "specialty": "Cardiology"
+            },
+            "contact": {
+                "phone": "+918123456790",
+                "address": "Delhi"
+            },
+            "affiliation": {
+                "hospital": "New Life Care Hospital",
+                "location": "Delhi",
+                "department": "Cardiology",
+                "designation": "Senior Consultant"
+            }
+        },
+        {
+            "name": "Dr Ritu Sharma",
+            "license": {
+                "license_no": "MH-MED-2021-5566",
+                "status": "Active",
+                "issued_by": "Maharashtra Medical Council",
+                "valid_till": "2026-03-15",
+                "specialty": "Neurology"
+            },
+            "contact": {
+                "phone": "+919112233445",
+                "address": "Mumbai"
+            },
+            "affiliation": {
+                "hospital": "Apollo Hospitals",
+                "location": "Mumbai",
+                "department": "Neurology",
+                "designation": "Senior Consultant"
+            }
+        }
+    ]
+}

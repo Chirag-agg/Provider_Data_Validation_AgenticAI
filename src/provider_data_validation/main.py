@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import os
-from crews.notification_crew import NotificationCrew
+from .crews.notification_crew import NotificationCrew
 import dotenv
 
 dotenv.load_dotenv()
-from crews.data_intake_crew.data_intake_crew import ProviderIntakeCrew
+from .crews.data_intake_crew.data_intake_crew import ProviderIntakeCrew
 
 def kickoff_notification_crew():
     """Send SMS or make a call using the notification crew."""
@@ -54,7 +54,7 @@ def kickoff_data_intake_crew():
 
 def kickoff_data_validation_crew():
     """Test the data validation crew - extracts and validates provider data."""
-    from crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
+    from .crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
     import json
 
     provider_name = "Dr Aarav Mehta"
@@ -84,11 +84,66 @@ def kickoff_data_validation_crew():
     return validation_result
 
 
-def kickoff():
-    """Main entry point - runs the data validation crew by default."""
-    kickoff_data_validation_crew()
+def kickoff_drift_monitoring_crew():
+    """Test the drift monitoring crew - detects credential changes over time."""
+    from .crews.drift_monitoring_crew import DriftMonitoringCrew
+    import json
+
+    provider_name = "Dr Shalini Rao"
+    
+    print(f"\n{'='*60}")
+    print(f"Testing Drift Monitoring for: {provider_name}")
+    print(f"{'='*60}\n")
+    
+    print("Comparing current data against historical snapshot (2025-11-01)...")
+    print("Expected changes:")
+    print("  - License status: Active → Suspended")
+    print("  - Possible phone/affiliation changes")
+    print()
+    
+    try:
+        crew = DriftMonitoringCrew()
+        result = crew.crew().kickoff(inputs={"provider_name": provider_name})
+        
+        print(f"\n{'='*60}")
+        print("DRIFT MONITORING RESULT:")
+        print(f"{'='*60}")
+        print(result)
+        print(f"\n{'='*60}\n")
+        
+        return result
+        
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 if __name__ == "__main__":
-    # Run the validation crew test
-    kickoff()
+    import sys
+    
+    # Allow user to choose which crew to test
+    if len(sys.argv) > 1:
+        crew_choice = sys.argv[1].lower()
+    else:
+        print("\nAvailable crews to test:")
+        print("  1. validation - Data Validation Crew")
+        print("  2. intake     - Data Intake Crew")
+        print("  3. drift      - Drift Monitoring Crew")
+        print("  4. notify     - Notification Crew")
+        print("\nUsage: python main.py [validation|intake|drift|notify]")
+        print("Running default: validation\n")
+        crew_choice = "validation"
+    
+    if crew_choice in ["validation", "1"]:
+        kickoff_data_validation_crew()
+    elif crew_choice in ["intake", "2"]:
+        kickoff_data_intake_crew()
+    elif crew_choice in ["drift", "3"]:
+        kickoff_drift_monitoring_crew()
+    elif crew_choice in ["notify", "notification", "4"]:
+        kickoff_notification_crew()
+    else:
+        print(f"Unknown crew: {crew_choice}")
+        print("Valid options: validation, intake, drift, notify")

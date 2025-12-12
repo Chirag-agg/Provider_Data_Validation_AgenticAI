@@ -176,7 +176,7 @@ class ValidationService:
             crew_path = cls.BASE_PATH / "src" / "provider_data_validation" / "crews" / "data_validation_crew"
             sys.path.insert(0, str(crew_path.parent.parent))
             
-            from crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
+            from .crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
             
             # Extract data from all sources using just the provider name
             extracted_data = extract_provider_data(provider.provider_name)
