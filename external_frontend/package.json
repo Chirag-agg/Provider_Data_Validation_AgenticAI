@@ -20,7 +20,7 @@
         "react-router-dom": "^6.26.0",
         "react-simple-maps": "^3.0.0",
         "react-tooltip": "^5.30.0",
-        "recharts": "^2.12.7",
+        "recharts": "^2.15.4",
         "tailwind-merge": "^2.4.0"
     },
     "devDependencies": {

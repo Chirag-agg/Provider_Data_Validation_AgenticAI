@@ -7,7 +7,8 @@ import {
   PlayCircle,
   ClipboardList,
   Settings,
-  Activity
+  Activity,
+  Phone
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -33,6 +34,7 @@ const Sidebar = () => {
     { icon: Users, label: 'Directory', path: '/directory' },
     { icon: Activity, label: 'Drift Monitoring', path: '/drift-monitoring' },
     { icon: FileCheck, label: 'Manual Review', path: '/review' },
+    { icon: Phone, label: 'Bulk Outreach', path: '/bulk-outreach' },
     { icon: ClipboardList, label: 'Activity Logs', path: '/logs' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
@@ -46,7 +48,7 @@ const Sidebar = () => {
         <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">Provider Data</p>
       </div>
 
-      <nav className="flex-1 px-4 flex flex-col justify-center gap-8">
+      <nav className="flex-1 px-4 py-8 flex flex-col justify-start gap-4 overflow-y-auto">
         {navItems.map((item, index) => (
           <NavLink
             key={item.path}

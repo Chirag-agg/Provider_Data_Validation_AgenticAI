@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, MessageSquare, CheckCircle, AlertTriangle, Clock, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertTriangle, Clock, Shield } from 'lucide-react';
 import gsap from 'gsap';
 
 const ProviderDetail = () => {
@@ -8,7 +8,6 @@ const ProviderDetail = () => {
     const navigate = useNavigate();
     const [provider, setProvider] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [verifying, setVerifying] = useState(false);
 
     useEffect(() => {
         fetchProvider();
@@ -91,20 +90,6 @@ const ProviderDetail = () => {
             console.error("Error fetching provider", error);
             setProvider({ id, name: 'Unknown Provider', specialty: 'N/A', verified: false, status: 'Not Found' });
             setLoading(false);
-        }
-    };
-
-    const handleVerify = async (method) => {
-        setVerifying(true);
-        try {
-            // Simulate verification
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setProvider({ ...provider, verified: true, status: 'Verified' });
-            alert(`Verification via ${method.toUpperCase()} sent successfully!`);
-        } catch (error) {
-            console.error("Verification failed", error);
-        } finally {
-            setVerifying(false);
         }
     };
 
@@ -372,54 +357,30 @@ const ProviderDetail = () => {
                     </div>
                 </div>
 
-                {/* Right Column: Actions */}
+                {/* Right Column: Confidence Score */}
                 <div className="space-y-6">
-                    <div className="glass-panel p-6 rounded-2xl">
-                        <h3 className="text-lg font-semibold mb-4">Verification Actions</h3>
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => handleVerify('sms')}
-                                disabled={verifying}
-                                className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                            >
-                                <MessageSquare size={18} />
-                                {verifying ? 'Sending...' : 'Trigger SMS Verification'}
-                            </button>
-                            <button
-                                onClick={() => handleVerify('call')}
-                                disabled={verifying}
-                                className="w-full py-3 px-4 bg-secondary/10 hover:bg-secondary/20 border border-secondary/30 text-secondary rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                            >
-                                <Phone size={18} />
-                                {verifying ? 'Calling...' : 'Simulate Voice Call'}
-                            </button>
+                    <h3 className="text-lg font-semibold mb-4">Confidence Score</h3>
+                    <div className="flex flex-col items-center justify-center py-4">
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                                <path
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke="#1e293b"
+                                    strokeWidth="3"
+                                />
+                                <path
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke={provider.confidenceScore > 80 ? '#4ade80' : '#fbbf24'}
+                                    strokeWidth="3"
+                                    strokeDasharray={`${provider.confidenceScore}, 100`}
+                                    className="animate-[spin_1s_ease-out_reverse]"
+                                />
+                            </svg>
+                            <span className="absolute text-2xl font-bold text-white">{provider.confidenceScore}%</span>
                         </div>
-                    </div>
-
-                    <div className="glass-panel p-6 rounded-2xl">
-                        <h3 className="text-lg font-semibold mb-4">Confidence Score</h3>
-                        <div className="flex flex-col items-center justify-center py-4">
-                            <div className="relative w-32 h-32 flex items-center justify-center">
-                                <svg className="w-full h-full" viewBox="0 0 36 36">
-                                    <path
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        fill="none"
-                                        stroke="#1e293b"
-                                        strokeWidth="3"
-                                    />
-                                    <path
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        fill="none"
-                                        stroke={provider.confidenceScore > 80 ? '#4ade80' : '#fbbf24'}
-                                        strokeWidth="3"
-                                        strokeDasharray={`${provider.confidenceScore}, 100`}
-                                        className="animate-[spin_1s_ease-out_reverse]"
-                                    />
-                                </svg>
-                                <span className="absolute text-2xl font-bold text-white">{provider.confidenceScore}%</span>
-                            </div>
-                            <p className="text-xs text-slate-400 mt-2 text-center">Based on multi-source validation</p>
-                        </div>
+                        <p className="text-xs text-slate-400 mt-2 text-center">Based on multi-source validation</p>
                     </div>
                 </div>
             </div>

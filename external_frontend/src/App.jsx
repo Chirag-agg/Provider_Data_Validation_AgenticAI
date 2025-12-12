@@ -10,6 +10,7 @@ import Logs from './pages/Logs';
 import Settings from './pages/Settings';
 import MapPage from './pages/MapPage';
 import DriftMonitoring from './pages/DriftMonitoring';
+import BulkOutreach from './pages/BulkOutreach';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
                     <Route path="validation" element={<Validation />} />
                     <Route path="drift-monitoring" element={<DriftMonitoring />} />
                     <Route path="review" element={<ReviewQueue />} />
+                    <Route path="bulk-outreach" element={<BulkOutreach />} />
                     <Route path="logs" element={<Logs />} />
                     <Route path="settings" element={<Settings />} />
                 </Route>

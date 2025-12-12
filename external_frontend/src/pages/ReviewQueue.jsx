@@ -6,24 +6,42 @@ const ReviewQueue = () => {
     const [reviews, setReviews] = useState([]);
     const navigate = useNavigate();
 
-    // Mock review data
-    const mockReviews = [
-        { id: 'prov_002', name: 'Dr. Michael Chen', specialty: 'Neurology', issues: ['Address mismatch', 'License expired'], phone: '(555) 234-5678' },
-        { id: 'prov_005', name: 'Dr. Lisa Anderson', specialty: 'Pediatrics', issues: ['Phone number conflict'], phone: '(555) 567-8901' },
-        { id: 'prov_008', name: 'Dr. Robert Martinez', specialty: 'Oncology', issues: ['NPI not found'], phone: '(555) 789-0123' },
-    ];
-
     useEffect(() => {
         fetchReviews();
     }, []);
 
     const fetchReviews = async () => {
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 300));
-            setReviews(mockReviews);
+            // Get validated providers from localStorage
+            const storedResults = localStorage.getItem('validationResults');
+
+            if (!storedResults) {
+                setReviews([]);
+                return;
+            }
+
+            const results = JSON.parse(storedResults);
+
+            // Filter only FLAGGED or providers requiring manual review
+            const flaggedProviders = results
+                .filter(result =>
+                    result.validation_status === 'FLAGGED' ||
+                    result.requires_manual_review === true ||
+                    (result.issues && result.issues.some(issue => issue.severity === 'HIGH' || issue.severity === 'CRITICAL'))
+                )
+                .map(result => ({
+                    id: result.provider_id,
+                    name: result.provider_name,
+                    specialty: result.verified_specialty || 'Unknown',
+                    issues: result.issues?.map(i => i.issue) || ['Requires review'],
+                    phone: result.verified_phone || 'N/A',
+                    confidenceScore: Math.round((result.confidence_scores?.overall_confidence || 0) * 100)
+                }));
+
+            setReviews(flaggedProviders);
         } catch (error) {
             console.error("Error fetching reviews", error);
+            setReviews([]);
         }
     };
 
