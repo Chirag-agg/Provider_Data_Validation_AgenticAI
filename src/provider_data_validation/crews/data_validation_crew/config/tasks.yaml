@@ -1,37 +1,28 @@
 data_extraction_task:
   description: |
-    You are given one input:
-    - provider_name (string)
-
+    Provider to extract: {provider_name}
+    
     STEP 1:
-    Load ALL registries using tools.
-
+    Use the extract_provider_records tool with provider_name: {provider_name}
+    
     STEP 2:
-    Perform EXACT case-insensitive name matching.
-
+    The tool will search ALL registries:
+    - NPI Registry
+    - State License Registry  
+    - Hospital Rosters
+    - Maps/Directory Listings
+    - Clinic Websites
+    
     STEP 3:
-    Return RAW MATCHED RECORDS ONLY in this format:
-
-    {
-      "npi": {},
-      "license": {},
-      "hospital": {},
-      "maps": {},
-      "clinic": {}
-    }
-
-    If no match exists in a source, return empty object {}.
-
-    ABSOLUTE RULES:
-    - No hallucinated values
-    - No confidence scores
-    - No reasoning
-    - No explanations
-    - No markdown
-    - Only return JSON
-
+    Return the complete JSON output from the tool.
+    
+    CRITICAL:
+    - Use provider_name: {provider_name}
+    - Return exact JSON from the tool
+    - No modifications or filtering
+    
   expected_output: >
-    RAW JSON ONLY.
+    JSON object with all extracted provider data from available sources
 
   agent: data_extraction_agent
 

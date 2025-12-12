@@ -50,11 +50,11 @@
       "doctors": [
         {
           "name": "Dr Vikram Singh",
-          "specialty": "Orthopedic Surgeon",
-          "phone": "+919223344556",
-          "department": "Orthopedics",
+          "specialty": "General Surgery",
+          "phone": "+919922344556",
+          "department": "Surgery",
           "experience_years": 11,
-          "designation": "Senior Consultant"
+          "designation": "Senior Surgeon"
         }
       ]
     },
@@ -158,4 +158,3 @@
     }
   ]
 }
-

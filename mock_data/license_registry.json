@@ -10,12 +10,12 @@
       "phone": "+918123456790"
     },
     {
-      "license_no": "KA-MED-2022-7788",
       "doctor_name": "Dr Shalini Rao",
-      "status": "Suspended",
+      "license_no": "KA-MED-2022-7788",
+      "specialty": "Dermatology",
+      "status": "Expired",
       "issued_by": "Karnataka Medical Council",
-      "valid_till": "2024-12-31",
-      "specialty": "Dermatology"
+      "valid_till": "2024-06-30"
     },
     {
       "license_no": "MH-MED-2021-5566",

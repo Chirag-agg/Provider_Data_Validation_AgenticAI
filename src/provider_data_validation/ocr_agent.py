@@ -117,24 +117,33 @@ def clean_names_with_llm(raw_text: str) -> str:
         
         ref_list = "\n".join(f"- {name}" for name in reference_names) if reference_names else "(No reference available)"
         
-        prompt = f"""You must match OCR names to this reference database ONLY.
+        prompt = f"""Match OCR-extracted names to the reference database. Be LENIENT with matching - handwriting OCR is imperfect.
 
-VALID PROVIDER NAMES (reference database):
+REFERENCE DATABASE (trusted source):
 {ref_list}
 
-OCR EXTRACTED TEXT (has errors - needs matching):
+OCR EXTRACTED (may have typos, missing letters, extra letters):
 {raw_text}
 
-STRICT RULES:
-1. For each OCR name, find the BEST MATCH in the reference database
-2. ONLY return names that exist in the reference database
-3. Match similar names (e.g., "Ajay Mehta" matches "Dr Aarav Mehta")
-4. Skip any OCR names that don't closely match a reference name
-5. Remove headers like "Provider name"
-6. Output ONLY matched reference names, one per line
-7. NO explanations, NO arrows, just the corrected names from reference
+MATCHING RULES:
+1. Match names even if they have typos or missing/extra letters
+2. Match based on similarity: "Prya Patel" → "Dr Priya Patel"
+3. Match if first name OR last name is similar: "Rajsh Iyer" → "Dr Rajesh Iyer"
+4. Ignore "Dr" prefix when matching
+5. Be GENEROUS with matching - prioritize recall over precision
+6. If a name is even 60% similar to a reference name, match it
+7. Output the REFERENCE name (with "Dr"), not the OCR name
+8. Skip ONLY obvious headers like "Provider Name" or "List"
 
-MATCHED NAMES FROM REFERENCE:"""
+OUTPUT FORMAT:
+- One name per line
+- Only reference names (with "Dr" prefix)
+- No parentheses, explanations, or commentary
+- If OCR has "Mera Reddy", output "Dr Meera Reddy"
+- If OCR has "Kavta Desai", output "Dr Kavita Desai"
+
+MATCHED NAMES:
+"""
 
         response = requests.post(
             "http://localhost:11434/api/generate",
@@ -150,6 +159,13 @@ MATCHED NAMES FROM REFERENCE:"""
         if response.status_code == 200:
             raw_cleaned = response.json().get("response", "")
             
+            # DEBUG: Print what Llama3.1 returned
+            print(f"\n{'='*60}")
+            print(f"LLAMA3.1 RAW RESPONSE:")
+            print(f"{'='*60}")
+            print(raw_cleaned[:800] if len(raw_cleaned) > 800 else raw_cleaned)
+            print(f"{'='*60}\n")
+            
             # Post-process: Extract only corrected names (handle arrow format)
             lines = raw_cleaned.strip().split('\n')
             cleaned_names = []
@@ -159,9 +175,14 @@ MATCHED NAMES FROM REFERENCE:"""
                 if not line:
                     continue
                 
-                # Skip intro/header lines
+                # Skip intro/header/commentary lines
                 line_lower = line.lower()
-                if any(skip in line_lower for skip in ['here is', 'cleaned', 'list', 'names:', 'corrected']):
+                skip_phrases = [
+                    'here is', 'cleaned', 'list', 'names:', 'corrected',
+                    'match', 'similar', 'closest', 'exact', 'no match',
+                    'reference', 'database', '(', ')'
+                ]
+                if any(skip in line_lower for skip in skip_phrases):
                     continue
                     
                 # If format is "OCR -> Corrected", take only the corrected part
@@ -170,11 +191,20 @@ MATCHED NAMES FROM REFERENCE:"""
                     if len(parts) == 2 and parts[1].strip():
                         cleaned_names.append(parts[1].strip())
                 elif line and not line.startswith('-') and not line.startswith('*') and not line.startswith('#'):
-                    # Regular name without arrow
+                    # Regular name without arrow  
                     cleaned_names.append(line)
             
-            final_output = '\n'.join(cleaned_names)
-            print(f"  🧹 Llama3.1 matched {len(cleaned_names)} names to reference")
+            # Deduplicate while preserving order
+            seen = set()
+            final_names = []
+            for name in cleaned_names:
+                name_lower = name.lower()
+                if name_lower not in seen:
+                    final_names.append(name)
+                    seen.add(name_lower)
+            
+            final_output = '\n'.join(final_names)
+            print(f"  🧹 Llama3.1 matched {len(final_names)} unique names to reference")
             return final_output
         else:
             print(f"  ⚠️ Llama3.1 unavailable")

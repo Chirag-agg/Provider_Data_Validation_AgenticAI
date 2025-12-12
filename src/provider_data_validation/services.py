@@ -164,159 +164,166 @@ class ValidationService:
     @classmethod
     def validate_provider(cls, provider: ProviderInput) -> ValidationResult:
         """
-        Validate a single provider against all data sources using CrewAI.
+        Validate a single provider against all data sources using DataValidationCrew with Ollama.
         Returns comprehensive validation result with confidence scores.
         """
         start_time = time.time()
         provider_id = str(uuid.uuid4())
         
-        # Import CrewAI validation functions
-        try:
-            import sys
-            crew_path = cls.BASE_PATH / "src" / "provider_data_validation" / "crews" / "data_validation_crew"
-            sys.path.insert(0, str(crew_path.parent.parent))
-            
+        # ============================================================
+        # OLLAMA CREW DISABLED - Using helper functions for reliability
+        # To re-enable: uncomment the crew code below and set crew_failed based on crew result
+        # ============================================================
+        crew_failed = True  # Force fallback to helper functions
+        
+        # Run DataValidationCrew with Ollama (CURRENTLY DISABLED)
+        # crew_failed = False
+        # try:
+        #     from .crews.data_validation_crew.data_validation_crew import DataValidationCrew
+        #     
+        #     print(f"\n🤖 Attempting validation with Ollama crew...")
+        #     
+        #     # Create and run the crew with Ollama agents
+        #     crew = DataValidationCrew()
+        #     result = crew.crew().kickoff(inputs={"provider_name": provider.provider_name})
+        #     
+        #     # Parse the crew output
+        #     import json
+        #     import re
+        #     
+        #     # Extract JSON from crew result
+        #     result_str = str(result.raw) if hasattr(result, 'raw') else str(result)
+        #     result_str = re.sub(r'```json\s*|\s*```', '', result_str)
+        #     result_str = result_str.strip()
+        #     
+        #     # Debug: Print what we got
+        #     print(f"\n{'='*60}")
+        #     print(f"CREW RESULT (first 500 chars):")
+        #     print(f"{'='*60}")
+        #     print(result_str[:500] if len(result_str) > 500 else result_str)
+        #     print(f"{'='*60}\n")
+        #     
+        #     # Check if result is empty
+        #     if not result_str:
+        #         print("⚠️ Crew returned empty result, falling back to helpers...")
+        #         crew_failed = True
+        #     else:
+        #         # Parse the validation data
+        #         validation_result = json.loads(result_str)
+        #         
+        #         # Check if crew found any sources
+        #         matched_sources = validation_result.get("identity", {}).get("matched_sources", [])
+        #         if not matched_sources or len(matched_sources) == 0:
+        #             print(f"⚠️ Crew found 0 sources for {provider.provider_name}, falling back to helpers...")
+        #             crew_failed = True
+        #         else:
+        #             print(f"✅ Crew found {len(matched_sources)} sources: {matched_sources}")
+        #             
+        # except Exception as e:
+        #     print(f"⚠️ Crew execution failed: {e}")
+        #     print("   Falling back to helper functions...")
+        #     crew_failed = True
+        
+        # FALLBACK: Use helper functions (ALWAYS USED NOW)
+        if crew_failed:
             from .crews.data_validation_crew.data_validation_crew import extract_provider_data, validate_provider_data
             
-            # Extract data from all sources using just the provider name
+            print(f"🔧 Using helper functions for {provider.provider_name}...")
             extracted_data = extract_provider_data(provider.provider_name)
-            
-            # Validate the extracted data
             validation_result = validate_provider_data(extracted_data)
-            
-            # Convert CrewAI result to our ValidationResult format
-            npi_data = extracted_data.get("npi", {})
-            license_data = extracted_data.get("license", {})
-            hospital_data = extracted_data.get("hospital", {})
-            maps_data = extracted_data.get("maps", {})
-            clinic_data = extracted_data.get("clinic", {})
-            
-            # Extract verified information
-            verified_phone = npi_data.get("phone") or maps_data.get("phone") or clinic_data.get("phone")
-            verified_address = npi_data.get("address") or maps_data.get("address") or clinic_data.get("address")
-            verified_specialty = npi_data.get("specialty") or clinic_data.get("specialty")
-            
-            # Build confidence scores
-            confidence_scores = ConfidenceScores(
-                identity_match=validation_result["identity"]["match_score"],
-                license_validity=validation_result["license"]["confidence"],
-                contact_info_accuracy=validation_result["location"]["confidence"],
-                hospital_affiliation=validation_result["affiliation"]["confidence"],
-                specialty_verification=validation_result["specialty"]["confidence"],
-                data_freshness=0.9,  # Mock data is relatively fresh
-                overall_confidence=validation_result["overall_validation_confidence"]
+            print(f"✅ Helper functions completed")
+        
+        # The crew output or helper output is now in validation_result
+        # Extract information from validation_result
+        license_data = validation_result.get("license", {})
+        affiliation_data = validation_result.get("affiliation", {})
+        location_data = validation_result.get("location", {})
+        specialty_data = validation_result.get("specialty", {})
+        
+        # Extract verified information from validation output
+        verified_phone = location_data.get("verified_phone")
+        verified_address = location_data.get("verified_address")
+        verified_specialty = specialty_data.get("verified_specialty")
+        
+        # Build confidence scores
+        confidence_scores = ConfidenceScores(
+            identity_match=validation_result.get("identity", {}).get("match_score", 0.0),
+            license_validity=license_data.get("confidence", 0.0),
+            contact_info_accuracy=location_data.get("confidence", 0.0),
+            hospital_affiliation=affiliation_data.get("confidence", 0.0),
+            specialty_verification=specialty_data.get("confidence", 0.0),
+            data_freshness=0.9,  # Mock data is relatively fresh
+            overall_confidence=validation_result.get("overall_validation_confidence", 0.0)
+        )
+        
+        # Build license info
+        license_info = None
+        if license_data.get("license_no"):
+            license_info = LicenseInfo(
+                license_number=license_data.get("license_no"),
+                status=license_data.get("status"),
+                specialty=verified_specialty or specialty_data.get("input_specialty"),
+                expiration_date=license_data.get("valid_till"),
+                issuing_body=license_data.get("issued_by", "")
             )
-            
-            # Build license info
-            license_info = None
-            if license_data:
-                license_info = LicenseInfo(
-                    license_number=license_data.get("license_no"),
-                    status=license_data.get("status"),
-                    specialty=license_data.get("specialty"),
-                    expiration_date=license_data.get("valid_till"),
-                    issuing_body=license_data.get("issuing_authority")
-                )
-            
-            # Build hospital affiliation
-            hospital_affiliation = None
-            if hospital_data:
-                hospital_affiliation = HospitalAffiliation(
-                    hospital_name=hospital_data.get("hospital_name"),
-                    department=hospital_data.get("department"),
-                    position=hospital_data.get("position")
-                )
-            
-            # Determine validation status
-            match_score = validation_result["identity"]["match_score"]
-            if match_score >= 0.6:
-                validation_status = "VERIFIED"
-            elif match_score >= 0.4:
-                validation_status = "PARTIALLY_VERIFIED"
-            else:
-                validation_status = "UNVERIFIED"
-            
-            # Check for critical issues
-            if license_data and license_data.get("status") != "Active":
-                validation_status = "FLAGGED"
-            
-            # Build issues list
-            issues: List[ValidationIssue] = []
-            for issue_text in validation_result.get("issues", []):
-                severity = "HIGH" if "license" in issue_text.lower() else "MEDIUM"
-                issues.append(ValidationIssue(
-                    issue=issue_text,
-                    severity=severity,
-                    source="validation_crew",
-                    recommendation="Review and verify manually"
-                ))
-            
-            processing_time_ms = (time.time() - start_time) * 1000
-            
-            return ValidationResult(
-                provider_id=provider_id,
-                input_data=provider.model_dump(),
-                provider_name=provider.provider_name,
-                npi_number=npi_data.get("npi") if npi_data else None,
-                verified_phone=verified_phone,
-                verified_address=verified_address,
-                verified_specialty=verified_specialty,
-                license_info=license_info,
-                hospital_affiliation=hospital_affiliation,
-                confidence_scores=confidence_scores,
-                sources_checked=["npi", "license", "hospital", "maps", "clinic"],
-                sources_matched=validation_result["identity"]["matched_sources"],
-                validation_status=validation_status,
-                issues=issues,
-                risk_flags=[],
-                requires_manual_review=validation_status == "FLAGGED",
-                requires_contact_verification=validation_result.get("requires_contact_verification", False),
-                next_steps=[],
-                processing_time_ms=processing_time_ms
+        
+        # Build hospital affiliation
+        hospital_affiliation = None
+        if affiliation_data.get("hospital"):
+            hospital_affiliation = HospitalAffiliation(
+                hospital_name=affiliation_data.get("hospital"),
+                department=affiliation_data.get("department"),
+                position=affiliation_data.get("designation", "")
             )
-            
-        except Exception as e:
-            print(f"Error in CrewAI validation: {e}")
-            import traceback
-            traceback.print_exc()
-            
-            # Fallback to basic validation
-            processing_time_ms = (time.time() - start_time) * 1000
-            return ValidationResult(
-                provider_id=provider_id,
-                input_data=provider.model_dump(),
-                provider_name=provider.provider_name,
-                npi_number=None,
-                verified_phone=None,
-                verified_address=None,
-                verified_specialty=None,
-                license_info=None,
-                hospital_affiliation=None,
-                confidence_scores=ConfidenceScores(
-                    identity_match=0.0,
-                    license_validity=0.0,
-                    contact_info_accuracy=0.0,
-                    hospital_affiliation=0.0,
-                    specialty_verification=0.0,
-                    data_freshness=0.0,
-                    overall_confidence=0.0
-                ),
-                sources_checked=["npi", "license", "hospital", "maps", "clinic"],
-                sources_matched=[],
-                validation_status="UNVERIFIED",
-                issues=[ValidationIssue(
-                    issue=f"Validation error: {str(e)}",
-                    severity="CRITICAL",
-                    source="system",
-                    recommendation="Check system logs"
-                )],
-                risk_flags=[],
-                requires_manual_review=True,
-                requires_contact_verification=True,
-                next_steps=["System error - manual review required"],
-                processing_time_ms=processing_time_ms
-            )
-    
+        
+        # Determine validation status
+        match_score = validation_result["identity"]["match_score"]
+        if match_score >= 0.6:
+            validation_status = "VERIFIED"
+        elif match_score >= 0.4:
+            validation_status = "PARTIALLY_VERIFIED"
+        else:
+            validation_status = "UNVERIFIED"
+        
+        # Check for critical issues
+        if license_data and license_data.get("status") != "Active":
+            validation_status = "FLAGGED"
+        
+        # Build issues list
+        issues: List[ValidationIssue] = []
+        for issue_text in validation_result.get("issues", []):
+            severity = "HIGH" if "license" in issue_text.lower() else "MEDIUM"
+            issues.append(ValidationIssue(
+                issue=issue_text,
+                severity=severity,
+                source="validation_crew",
+                recommendation="Review and verify manually"
+            ))
+        
+        processing_time_ms = (time.time() - start_time) * 1000
+        
+        return ValidationResult(
+            provider_id=provider_id,
+            input_data=provider.model_dump(),
+            provider_name=provider.provider_name,
+            npi_number=None,  # Crew doesn't return NPI directly
+            verified_phone=verified_phone,
+            verified_address=verified_address,
+            verified_specialty=verified_specialty,
+            license_info=license_info,
+            hospital_affiliation=hospital_affiliation,
+            confidence_scores=confidence_scores,
+            sources_checked=["npi", "license", "hospital", "maps", "clinic"],
+            sources_matched=validation_result.get("identity", {}).get("matched_sources", []),
+            validation_status=validation_status,
+            issues=issues,
+            risk_flags=[],
+            requires_manual_review=validation_status == "FLAGGED",
+            requires_contact_verification=validation_result.get("requires_contact_verification", False),
+            next_steps=[],
+            processing_time_ms=processing_time_ms
+        )
+
     @classmethod
     async def validate_batch(cls, providers: List[ProviderInput], batch_id: str) -> BatchValidationResponse:
         """

@@ -57,11 +57,11 @@
       "license_no": "DL-MED-2022-7766"
     },
     {
-      "npi": "6677889900",
+      "npi": "9876543210",
       "name": "Dr Rajesh Iyer",
       "specialty": "Psychiatry",
-      "phone": "+919667788990",
-      "address": "NIMHANS, Bangalore",
+      "phone": "+919667799999",
+      "address": "Hasur Road, Bangalore 560029",
       "license_no": "KA-MED-2021-5544"
     },
     {
@@ -82,4 +82,3 @@
     }
   ]
 }
-
