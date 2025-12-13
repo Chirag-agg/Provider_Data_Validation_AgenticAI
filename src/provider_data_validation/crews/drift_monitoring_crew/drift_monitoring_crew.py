@@ -6,12 +6,16 @@ import os
 from datetime import datetime
 from typing import Optional, Dict, List, Any
 
-# Paths
-HISTORICAL_DATA_DIR = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\historical"
-LICENSE_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\license_registry.json"
-HOSPITAL_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\hospital_roster.json"
-NPI_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\npi_registry.json"
-MAPS_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\maps_listing.json"
+# Paths - relative to project root
+# Go up 5 levels: drift_monitoring_crew.py -> drift_monitoring_crew/ -> crews/ -> provider_data_validation/ -> src/ -> project_root/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+MOCK_DATA_DIR = os.path.join(BASE_DIR, "mock_data")
+
+HISTORICAL_DATA_DIR = os.path.join(MOCK_DATA_DIR, "historical")
+LICENSE_PATH = os.path.join(MOCK_DATA_DIR, "license_registry.json")
+HOSPITAL_PATH = os.path.join(MOCK_DATA_DIR, "hospital_roster.json")
+NPI_PATH = os.path.join(MOCK_DATA_DIR, "npi_registry.json")
+MAPS_PATH = os.path.join(MOCK_DATA_DIR, "maps_listing.json")
 
 
 # Helper function to load historical data

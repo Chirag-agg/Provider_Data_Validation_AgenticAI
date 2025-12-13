@@ -24,3 +24,7 @@ output/
 *.egg-info/
 dist/
 build/
+
+# Node.js
+node_modules/
+external_frontend/dist/

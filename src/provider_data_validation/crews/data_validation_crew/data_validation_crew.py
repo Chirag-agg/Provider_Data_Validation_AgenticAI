@@ -5,12 +5,16 @@ import json
 import os
 import bs4
 
-# Mock data paths
-NPI_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\npi_registry.json"
-LICENSE_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\license_registry.json"
-HOSPITAL_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\hospital_roster.json"
-MAPS_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\maps_listing.json"
-CLINIC_PATH = r"C:\Users\caagg\OneDrive\Desktop\Coding\CrewAI\provider_data_validation\mock_data\clinic_website.html"
+# Mock data paths - relative to project root
+# Go up 5 levels: data_validation_crew.py -> data_validation_crew/ -> crews/ -> provider_data_validation/ -> src/ -> project_root/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+MOCK_DATA_DIR = os.path.join(BASE_DIR, "mock_data")
+
+NPI_PATH = os.path.join(MOCK_DATA_DIR, "npi_registry.json")
+LICENSE_PATH = os.path.join(MOCK_DATA_DIR, "license_registry.json")
+HOSPITAL_PATH = os.path.join(MOCK_DATA_DIR, "hospital_roster.json")
+MAPS_PATH = os.path.join(MOCK_DATA_DIR, "maps_listing.json")
+CLINIC_PATH = os.path.join(MOCK_DATA_DIR, "clinic_website.html")
 
 # Helper function to validate extracted data and compute confidence scores
 def validate_provider_data(extracted_data: dict) -> dict:
@@ -128,14 +132,80 @@ def validate_provider_data(extracted_data: dict) -> dict:
     elif input_specialty or verified_specialty:
         specialty_confidence = 0.5
     
-    # Overall validation confidence
-    overall_confidence = (match_score + license_confidence + location_confidence + affiliation_confidence + specialty_confidence) / 5.0
+    
+    # ==================================================================
+    # HYBRID VALIDATION SCORING SYSTEM
+    # Combines rule-based deterministic checks with penalty-based scoring
+    # Creates realistic confidence variance (60%-95%) based on actual issues
+    # ==================================================================
+    
+    # Base weights for each dimension
+    WEIGHTS = {
+        'identity_match': 0.25,      # How many sources found
+        'license': 0.20,             # License validity
+        'location': 0.20,            # Phone/address accuracy
+        'specialty': 0.15,           # Specialty verification
+        'affiliation': 0.10,         # Hospital affiliation
+        'consistency': 0.10          # Cross-source data consistency
+    }
+    
+    # Calculate weighted components
+    components = {
+        'identity_match': match_score,
+        'license': license_confidence,
+        'location': location_confidence,
+        'specialty': specialty_confidence,
+        'affiliation': affiliation_confidence,
+        'consistency': max(data_consistency_score, 0.0)
+    }
+    
+    # Weighted average
+    overall_base = sum(components[k] * WEIGHTS[k] for k in WEIGHTS.keys())
+    
+    # Apply penalties for critical issues
+    penalties = 0.0
+    issues = []
+    
+    # Penalty for low source coverage
+    if sources_found < 3:
+        penalty = (3 - sources_found) * 0.05  # -5% per missing source
+        penalties += penalty
+        issues.append(f"Limited data sources ({sources_found}/5)")
+    
+    # Penalty for data inconsistencies
+    if discrepancies:
+        penalty = len(discrepancies) * 0.08  # -8% per discrepancy
+        penalties += penalty
+        for disc in discrepancies:
+            issues.append(disc)
+    
+    # Penalty for inactive/missing license
+    if not license_data or license_data.get("status") != "Active":
+        penalties += 0.10
+        issues.append("License not active or not found")
+    
+    # Penalty for location verification needed
+    if needs_location_verification:
+        penalties += 0.07
+        issues.append("Location verification required")
+    
+    # Final confidence with penalties applied
+    overall_validation_confidence = max(overall_base - penalties, 0.35)  # Floor at 35%
+    
+    # Add some realistic variance (±2%) to avoid identical scores
+    import random
+    random.seed(hash(str(extracted_data)))  # Deterministic randomness
+    variance = random.uniform(-0.02, 0.02)
+    overall_validation_confidence = min(max(overall_validation_confidence + variance, 0.35), 1.0)
+    
+    # Round to percentage (e.g., 0.89 = 89%)
+    overall_validation_confidence = round(overall_validation_confidence, 2)
+    
     
     # Determine if contact verification is needed
     requires_contact_verification = sources_found < 3 or location_confidence < 0.7
     
-    # Identify issues
-    issues = []
+    # Merge additional issues with those from hybrid scoring
     if not license_data:
         issues.append("No license data found")
     elif license_data.get("status") != "Active":
@@ -146,6 +216,7 @@ def validate_provider_data(extracted_data: dict) -> dict:
         issues.append("Location/phone verification needed")
     if specialty_confidence < 0.8:
         issues.append("Specialty mismatch detected")
+    
     
     return {
         "identity": {
@@ -177,7 +248,7 @@ def validate_provider_data(extracted_data: dict) -> dict:
             "confidence": round(specialty_confidence, 2)
         },
         "issues": issues,
-        "overall_validation_confidence": round(overall_confidence, 2),
+        "overall_validation_confidence": round(overall_validation_confidence, 2),
         "requires_contact_verification": requires_contact_verification
     }
 

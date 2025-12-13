@@ -171,58 +171,56 @@ class ValidationService:
         provider_id = str(uuid.uuid4())
         
         # ============================================================
-        # OLLAMA CREW DISABLED - Using helper functions for reliability
-        # To re-enable: uncomment the crew code below and set crew_failed based on crew result
+        # HYBRID APPROACH: Try Ollama crew first, fallback to helpers
         # ============================================================
-        crew_failed = True  # Force fallback to helper functions
+        crew_failed = False
         
-        # Run DataValidationCrew with Ollama (CURRENTLY DISABLED)
-        # crew_failed = False
-        # try:
-        #     from .crews.data_validation_crew.data_validation_crew import DataValidationCrew
-        #     
-        #     print(f"\n🤖 Attempting validation with Ollama crew...")
-        #     
-        #     # Create and run the crew with Ollama agents
-        #     crew = DataValidationCrew()
-        #     result = crew.crew().kickoff(inputs={"provider_name": provider.provider_name})
-        #     
-        #     # Parse the crew output
-        #     import json
-        #     import re
-        #     
-        #     # Extract JSON from crew result
-        #     result_str = str(result.raw) if hasattr(result, 'raw') else str(result)
-        #     result_str = re.sub(r'```json\s*|\s*```', '', result_str)
-        #     result_str = result_str.strip()
-        #     
-        #     # Debug: Print what we got
-        #     print(f"\n{'='*60}")
-        #     print(f"CREW RESULT (first 500 chars):")
-        #     print(f"{'='*60}")
-        #     print(result_str[:500] if len(result_str) > 500 else result_str)
-        #     print(f"{'='*60}\n")
-        #     
-        #     # Check if result is empty
-        #     if not result_str:
-        #         print("⚠️ Crew returned empty result, falling back to helpers...")
-        #         crew_failed = True
-        #     else:
-        #         # Parse the validation data
-        #         validation_result = json.loads(result_str)
-        #         
-        #         # Check if crew found any sources
-        #         matched_sources = validation_result.get("identity", {}).get("matched_sources", [])
-        #         if not matched_sources or len(matched_sources) == 0:
-        #             print(f"⚠️ Crew found 0 sources for {provider.provider_name}, falling back to helpers...")
-        #             crew_failed = True
-        #         else:
-        #             print(f"✅ Crew found {len(matched_sources)} sources: {matched_sources}")
-        #             
-        # except Exception as e:
-        #     print(f"⚠️ Crew execution failed: {e}")
-        #     print("   Falling back to helper functions...")
-        #     crew_failed = True
+        # Run DataValidationCrew with Ollama
+        try:
+            from .crews.data_validation_crew.data_validation_crew import DataValidationCrew
+            
+            print(f"\n🤖 Attempting validation with Ollama crew...")
+            
+            # Create and run the crew with Ollama agents
+            crew = DataValidationCrew()
+            result = crew.crew().kickoff(inputs={"provider_name": provider.provider_name})
+            
+            # Parse the crew output
+            import json
+            import re
+            
+            # Extract JSON from crew result
+            result_str = str(result.raw) if hasattr(result, 'raw') else str(result)
+            result_str = re.sub(r'```json\s*|\s*```', '', result_str)
+            result_str = result_str.strip()
+            
+            # Debug: Print what we got
+            print(f"\n{'='*60}")
+            print(f"CREW RESULT (first 500 chars):")
+            print(f"{'='*60}")
+            print(result_str[:500] if len(result_str) > 500 else result_str)
+            print(f"{'='*60}\n")
+            
+            # Check if result is empty
+            if not result_str:
+                print("⚠️ Crew returned empty result, falling back to helpers...")
+                crew_failed = True
+            else:
+                # Parse the validation data
+                validation_result = json.loads(result_str)
+                
+                # Check if crew found any sources
+                matched_sources = validation_result.get("identity", {}).get("matched_sources", [])
+                if not matched_sources or len(matched_sources) == 0:
+                    print(f"⚠️ Crew found 0 sources for {provider.provider_name}, falling back to helpers...")
+                    crew_failed = True
+                else:
+                    print(f"✅ Crew found {len(matched_sources)} sources: {matched_sources}")
+                    
+        except Exception as e:
+            print(f"⚠️ Crew execution failed: {e}")
+            print("   Falling back to helper functions...")
+            crew_failed = True
         
         # FALLBACK: Use helper functions (ALWAYS USED NOW)
         if crew_failed:

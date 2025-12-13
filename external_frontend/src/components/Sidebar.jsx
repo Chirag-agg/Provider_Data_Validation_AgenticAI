@@ -6,7 +6,6 @@ import {
   FileCheck,
   PlayCircle,
   ClipboardList,
-  Settings,
   Activity,
   Phone
 } from 'lucide-react';
@@ -36,7 +35,6 @@ const Sidebar = () => {
     { icon: FileCheck, label: 'Manual Review', path: '/review' },
     { icon: Phone, label: 'Bulk Outreach', path: '/bulk-outreach' },
     { icon: ClipboardList, label: 'Activity Logs', path: '/logs' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   return (

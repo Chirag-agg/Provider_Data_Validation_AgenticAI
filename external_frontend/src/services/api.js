@@ -97,6 +97,36 @@ export const testWebhook = (webhookUrl) =>
         params: { webhook_url: webhookUrl }
     });
 
+// ==================== Provider Verification ====================
+
+/**
+ * Start provider verification workflow
+ * @param {Object} verificationRequest - Verification request data
+ * @param {string} verificationRequest.provider_id - Provider ID
+ * @param {string} verificationRequest.provider_name - Provider name
+ * @param {string} verificationRequest.phone - Phone number for verification
+ * @param {string} [verificationRequest.specialty] - Provider specialty
+ * @param {string} [verificationRequest.address] - Provider address
+ * @param {string} [verificationRequest.license_number] - License number
+ * @param {string} [verificationRequest.hospital] - Hospital affiliation
+ */
+export const startVerification = (verificationRequest) =>
+    api.post('/verify/start', verificationRequest);
+
+/**
+ * Get verification session status
+ * @param {string} sessionId - Verification session ID
+ */
+export const getVerificationStatus = (sessionId) =>
+    api.get(`/verify/${sessionId}`);
+
+/**
+ * Get all verification sessions for a provider
+ * @param {string} providerId - Provider ID
+ */
+export const getProviderVerifications = (providerId) =>
+    api.get(`/provider/${providerId}/verifications`);
+
 // ==================== Error Handler ====================
 
 // Add response interceptor for error handling

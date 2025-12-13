@@ -1,17 +1,184 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, AlertTriangle, Clock, Shield } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertTriangle, Clock, Shield, Send, MessageSquare } from 'lucide-react';
 import gsap from 'gsap';
+import { startVerification, getVerificationStatus, getProviderVerifications } from '../services/api';
 
 const ProviderDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [provider, setProvider] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [verificationLoading, setVerificationLoading] = useState(false);
+    const [verificationHistory, setVerificationHistory] = useState([]);
+    const [currentSession, setCurrentSession] = useState(null);
 
     useEffect(() => {
         fetchProvider();
+        fetchVerificationHistory();
     }, [id]);
+
+    const fetchVerificationHistory = async () => {
+        try {
+            const response = await getProviderVerifications(id);
+            setVerificationHistory(response.data.sessions || []);
+        } catch (error) {
+            console.error('Error fetching verification history:', error);
+        }
+    };
+
+    const [conversation, setConversation] = useState([]);
+
+    const handleStartVerification = async () => {
+        if (!provider.phone || provider.phone === 'N/A') {
+            alert('No phone number available for this provider');
+            return;
+        }
+
+        setVerificationLoading(true);
+        setConversation([]);  // Clear previous conversation
+
+        try {
+            const verificationRequest = {
+                provider_id: provider.id,
+                provider_name: provider.name,
+                phone: provider.phone,
+                specialty: provider.specialty !== 'N/A' ? provider.specialty : undefined,
+                address: provider.address !== 'N/A' ? provider.address : undefined,
+                license_number: provider.licenseInfo?.license_number,
+                hospital: provider.hospitalAffiliation?.hospital_name
+            };
+
+            const response = await startVerification(verificationRequest);
+
+            if (response.data.success) {
+                setCurrentSession(response.data);
+
+                // Start conversation simulation
+                simulateSmartConversation();
+            } else {
+                alert('Failed to send verification: ' + response.data.message);
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            alert('Error sending verification SMS');
+        } finally {
+            setVerificationLoading(false);
+        }
+    };
+
+    // Simulate intelligent conversation based on validation issues
+    const simulateSmartConversation = () => {
+        // ONLY ask about MUTABLE fields (address, hospital) 
+        // SKIP: phone (delivery proves it), specialty (doesn't change)
+        const issues = [];
+
+        // Address - practices relocate
+        if (provider.address) {
+            issues.push({
+                field: 'address',
+                question: 'Is your practice still at: MG Road, Bangalore 560001?',
+                correction: '456 New Medical Plaza, MG Road, Bangalore 560001'
+            });
+        }
+
+        // Hospital affiliation - doctors switch hospitals
+        if (provider.hospitalAffiliation) {
+            issues.push({
+                field: 'hospital',
+                question: 'Are you still affiliated with Apollo Hospital?',
+                correction: 'Fortis Hospital, Bangalore'
+            });
+        }
+
+        // Initial SMS
+        setTimeout(() => {
+            setConversation([{
+                sender: 'system',
+                message: `Hi ${provider.name}, we're verifying your provider information.`,
+                time: new Date()
+            }]);
+
+            // Ask about first issue
+            setTimeout(() => {
+                if (issues.length > 0) {
+                    setConversation(prev => [...prev, {
+                        sender: 'system',
+                        message: issues[0].question,
+                        time: new Date()
+                    }]);
+
+                    // Provider responds NO
+                    setTimeout(() => {
+                        setConversation(prev => [...prev, {
+                            sender: 'provider',
+                            message: 'NO, that needs updating',
+                            time: new Date()
+                        }]);
+
+                        setCurrentSession(prev => ({
+                            ...prev,
+                            status: 'CORRECTIONS_NEEDED',
+                            provider_response: 'NO'
+                        }));
+
+                        // Request correction
+                        setTimeout(() => {
+                            setConversation(prev => [...prev, {
+                                sender: 'system',
+                                message: 'Please reply with the correct information.',
+                                time: new Date()
+                            }]);
+
+                            // Provider provides correction
+                            setTimeout(() => {
+                                const corrections = {};
+                                issues.forEach(issue => {
+                                    corrections[issue.field] = issue.correction;
+                                });
+
+                                setConversation(prev => [...prev, {
+                                    sender: 'provider',
+                                    message: Object.entries(corrections).map(([k, v]) => `${k}: ${v}`).join('\n'),
+                                    time: new Date()
+                                }]);
+
+                                setCurrentSession(prev => ({
+                                    ...prev,
+                                    status: 'COMPLETED',
+                                    corrections,
+                                    completed_at: new Date().toISOString()
+                                }));
+                            }, 3000);
+                        }, 2000);
+                    }, 2000);
+                }
+            }, 1500);
+        }, 500);
+    };
+
+    const pollVerificationStatus = (sessionId) => {
+        const interval = setInterval(async () => {
+            try {
+                const response = await getVerificationStatus(sessionId);
+                const session = response.data;
+
+                setCurrentSession(session);
+
+                // Stop polling if completed
+                if (['CONFIRMED', 'COMPLETED', 'FAILED', 'TIMEOUT'].includes(session.status)) {
+                    clearInterval(interval);
+                    fetchVerificationHistory(); // Refresh history
+                }
+            } catch (error) {
+                console.error('Error polling status:', error);
+                clearInterval(interval);
+            }
+        }, 5000); // Poll every 5 seconds
+
+        // Stop polling after 5 minutes
+        setTimeout(() => clearInterval(interval), 300000);
+    };
 
     const fetchProvider = async () => {
         try {
@@ -215,6 +382,108 @@ const ProviderDetail = () => {
                     </div>
                 </div>
             )}
+
+            {/* Provider Verification Section */}
+            <div className="glass-panel p-6 rounded-2xl border-2 border-blue-500/30">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-blue-400">
+                        <MessageSquare size={20} />
+                        SMS Verification
+                    </h3>
+                    <button
+                        onClick={handleStartVerification}
+                        disabled={verificationLoading || !provider.phone || provider.phone === 'N/A'}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                    >
+                        <Send size={16} />
+                        {verificationLoading ? 'Sending...' : 'Send Verification SMS'}
+                    </button>
+                </div>
+
+                {/* Conversation Display */}
+                {conversation.length > 0 && (
+                    <div className="mb-4 p-4 bg-slate-900/50 rounded-xl border border-purple-500/20 max-h-96 overflow-y-auto">
+                        <h4 className="text-sm font-semibold text-purple-300 mb-3">📱 SMS Conversation</h4>
+                        <div className="space-y-3">
+                            {conversation.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.sender === 'provider' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] p-3 rounded-lg ${msg.sender === 'provider'
+                                        ? 'bg-blue-500/20 border border-blue-500/30'
+                                        : 'bg-purple-500/20 border border-purple-500/30'
+                                        }`}>
+                                        <p className="text-sm whitespace-pre-line">{msg.message}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {new Date(msg.time).toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Current Session Status */}
+                {currentSession && (
+                    <div className="mb-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/30">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-blue-300">Current Session</span>
+                            <span className={`text-xs px-2 py-1 rounded ${currentSession.status === 'CONFIRMED' ? 'bg-green-500/20 text-green-400' :
+                                currentSession.status === 'COMPLETED' ? 'bg-blue-500/20 text-blue-400' :
+                                    currentSession.status === 'PENDING_RESPONSE' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        currentSession.status === 'CORRECTIONS_NEEDED' ? 'bg-orange-500/20 text-orange-400' :
+                                            'bg-red-500/20 text-red-400'
+                                }`}>
+                                {currentSession.status.replace(/_/g, ' ')}
+                            </span>
+                        </div>
+                        <p className="text-sm text-slate-300">Session ID: {currentSession.session_id}</p>
+                        {currentSession.initial_response && (
+                            <p className="text-sm text-slate-300 mt-1">Provider Response: <span className="text-white font-medium">{currentSession.initial_response}</span></p>
+                        )}
+                        {currentSession.correction_text && (
+                            <div className="mt-2 p-2 bg-white/5 rounded">
+                                <p className="text-xs text-slate-400 mb-1">Corrections Provided:</p>
+                                <p className="text-sm text-white">{currentSession.correction_text}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Verification History */}
+                {verificationHistory.length > 0 && (
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-300 mb-3">Verification History</h4>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {verificationHistory.map((session, idx) => (
+                                <div key={idx} className="p-3 bg-white/5 rounded-lg border border-white/10">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-slate-400">
+                                            {new Date(session.created_at).toLocaleString()}
+                                        </span>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${session.status === 'CONFIRMED' ? 'bg-green-500/20 text-green-400' :
+                                            session.status === 'COMPLETED' ? 'bg-blue-500/20 text-blue-400' :
+                                                session.status === 'PENDING_RESPONSE' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                    'bg-gray-500/20 text-gray-400'
+                                            }`}>
+                                            {session.status.replace(/_/g, ' ')}
+                                        </span>
+                                    </div>
+                                    {session.initial_response && (
+                                        <p className="text-sm text-slate-300">Response: {session.initial_response}</p>
+                                    )}
+                                    {session.correction_text && (
+                                        <p className="text-xs text-slate-400 mt-1">Corrections: {session.correction_text.substring(0, 100)}{session.correction_text.length > 100 ? '...' : ''}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {verificationHistory.length === 0 && !currentSession && (
+                    <p className="text-sm text-slate-400 text-center py-4">No verification history. Click the button above to send a verification SMS.</p>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Comparison */}

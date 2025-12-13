@@ -6,7 +6,7 @@ Main entry point for the API server.
 import os
 import uuid
 from typing import Optional, List
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import asyncio
@@ -14,10 +14,10 @@ import asyncio
 from .models import (
     ProviderInput, ValidationResult, BatchValidationRequest, BatchValidationResponse,
     SingleValidationResponse, FileUploadResponse, HealthCheckResponse, 
-    ErrorResponse, ValidationStatsResponse
+    ErrorResponse, ValidationStatsResponse, VerificationRequest
 )
 from .services import ValidationService
-from .file_processor import FileProcessor
+from .tools.file_processor import FileProcessor
 
 # Create FastAPI app
 app = FastAPI(
@@ -363,6 +363,149 @@ async def monitor_drift(provider_name: str):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Drift monitoring failed: {str(e)}")
+
+
+# ==================== Provider Verification ====================
+
+@app.post("/verify/start")
+async def start_provider_verification(request: VerificationRequest):
+    """
+    Start interactive SMS verification for a provider.
+    Intelligently asks only about mismatched/problematic fields.
+    """
+    try:
+        from .tools.verification_service import start_verification
+        from .models import VerificationRequest, VerificationResponse
+        
+        # Try to get validation results for this provider to identify issues
+        validation_data = None
+        try:
+            # Check if we have validation results for this provider
+            for batch in ValidationService.batch_jobs.values():
+                for result in batch.results:
+                    if result.provider_id == request.provider_id:
+                        # Extract issues and discrepancies from validation
+                        validation_data = {
+                            'issues': [issue.issue for issue in result.issues] if result.issues else [],
+                            'discrepancies': {},
+                        }
+                        # Check for phone mismatch
+                        if result.input_data.get('phone') != result.verified_phone:
+                            validation_data['discrepancies']['phone'] = {
+                                'old_value': result.input_data.get('phone', ''),
+                                'new_value': result.verified_phone or ''
+                            }
+                        # Check for specialty mismatch
+                        if result.input_data.get('specialty') != result.verified_specialty:
+                            validation_data['discrepancies']['specialty'] = {
+                                'old_value': result.input_data.get('specialty', ''),
+                                'new_value': result.verified_specialty or ''
+                            }
+                        break
+        except Exception as e:
+            print(f"[VERIFY] Could not fetch validation data: {e}")
+        
+        # Merge validation data with request data
+        request_data = {
+            'specialty': request.specialty,
+            'phone': request.phone,
+            'address': request.address,
+            'license_number': request.license_number,
+            'hospital': request.hospital
+        }
+        if validation_data:
+            request_data.update(validation_data)
+        
+        # Pass enriched data to verification service  
+        success, message, session = start_verification(request, request_data)
+        
+        if success:
+            return VerificationResponse(
+                success=True,
+                session_id=session.session_id,
+                status=session.status,
+                message=message
+            )
+        else:
+            return VerificationResponse(
+                success=False,
+                session_id=session.session_id if session else None,
+                status=session.status if session else None,
+                message=message,
+                error=message
+            )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Verification failed: {str(e)}")
+
+
+@app.post("/verify/webhook")
+async def verification_sms_webhook(request: Request):
+    """
+    Twilio webhook endpoint for incoming SMS responses.
+    Configure this URL in your Twilio console.
+    """
+    try:
+        from .tools.verification_service import process_sms_response
+        
+        # Parse form data from Twilio webhook
+        form_data = await request.form()
+        from_phone = form_data.get("From", "")
+        message_body = form_data.get("Body", "")
+        
+        if not from_phone or not message_body:
+            raise HTTPException(status_code=400, detail="Missing From or Body in webhook")
+        
+        # Process the response
+        success, message = process_sms_response(from_phone, message_body)
+        
+        # Return TwiML response (Twilio expects XML)
+        from fastapi.responses import Response
+        return Response(
+            content=f"<?xml version='1.0' encoding='UTF-8'?><Response></Response>",
+            media_type="application/xml"
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        # Still return valid TwiML even on error
+        from fastapi.responses import Response
+        return Response(
+            content=f"<?xml version='1.0' encoding='UTF-8'?><Response></Response>",
+            media_type="application/xml"
+        )
+
+
+@app.get("/verify/{session_id}")
+async def get_verification_status(session_id: str):
+    """
+    Get the status of a verification session.
+    """
+    from .tools import verification_store
+    
+    session = verification_store.get_session(session_id)
+    
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    
+    return session
+
+
+@app.get("/provider/{provider_id}/verifications")
+async def get_provider_verifications(provider_id: str):
+    """
+    Get all verification sessions for a provider.
+    """
+    from .tools import verification_store
+    
+    sessions = verification_store.get_provider_sessions(provider_id)
+    
+    return {
+        "provider_id": provider_id,
+        "total_verifications": len(sessions),
+        "sessions": sessions
+    }
 
 
 # ==================== Root ====================
