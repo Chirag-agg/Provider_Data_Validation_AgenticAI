@@ -11,7 +11,7 @@ __pycache__/
 
 # IDE
 .DS_Store
-.vscode/
+.vscode/ 
 .idea/
 
 # Project-specific
