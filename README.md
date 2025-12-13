@@ -1,11 +1,11 @@
 # Provider Data Validation System
 
-> **AI-Powered Healthcare Provider Validation with Interactive SMS Verification**  
-> Automatically validates provider credentials across multiple data sources using hybrid AI validation (Ollama LLM + deterministic rules), calculates realistic confidence scores, and provides interactive SMS-based verification for data corrections.
+> **AI-Powered Healthcare Provider Validation with Interactive CALL/SMS Verification**  
+> Automatically validates provider credentials across multiple data sources using hybrid AI validation (Ollama LLM + deterministic rules), calculates realistic confidence scores, and provides interactive CALL/SMS-based verification for data corrections.
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
 ### 1. **Hybrid Validation Engine**
 - **Primary**: Ollama CrewAI with LLM-powered intelligent analysis
@@ -19,12 +19,11 @@
   - Data Consistency (10%) - Cross-source discrepancy detection
 - **Realistic Confidence Scores**: 60%-95% range with penalty-based adjustments
 
-### 2. **Interactive SMS Verification** (Demo Mode)
-- ✅ Smart questioning - asks only about **mutable fields** (address, hospital)
-- ✅ Skips phone (delivery proves it) and specialty (doesn't change post-training)
-- ✅ Chat-style conversation display in frontend
-- ✅ Real-time status updates
-- ✅ **DEMO_MODE** - Disables real SMS for safe demos (no charges!)
+### 2. **Interactive CALL/SMS Verification** (Demo Mode)
+-  Smart questioning - asks only about **mutable fields** (address, hospital)
+-  Chat-style conversation display in frontend
+-  Real-time status updates
+-  **DEMO_MODE** - Limits CALL/SMS to you for safe demos (no charges!)
 
 ### 3. **Multi-Source Data Extraction**
 Validates against 5 independent data sources:
@@ -33,12 +32,13 @@ Validates against 5 independent data sources:
 - **Hospital Roster** - Affiliation and department
 - **Maps Listing** - Practice location verification
 - **Clinic Website** - HTML scraping for additional details
+- **Historical Data** - Tracks changes in data
 
 ### 4. **Modern React Frontend**
 - **Dashboard** - System stats + Interactive WorldMap
 - **Directory** - Provider search and filtering
 - **Provider Detail** - Full validation breakdown with SMS conversation
-- **Bulk Outreach** - SMS campaign management
+- **Bulk Outreach** - CALL/SMS campaign management
 - **Drift Monitoring** - Automated change detection
 - **Manual Review** - Flagged records queue
 - **Activity Logs** - Complete audit trail
@@ -109,10 +109,8 @@ Validates against 5 independent data sources:
 
 ## 🎯 Validation Flow
 
-1. **Input Received** - Provider name, specialty, contact info
-2. **Try Ollama Crew** - AI-powered analysis with context understanding
-   - On success: Parse JSON result
-   - On failure: Fallback to deterministic functions
+1. **Input Received** - Provider name(optional - specialty, contact info)
+2. **Ollama Crew** - AI-powered analysis with context understanding
 3. **Extract from Sources** - Query 5 data sources with fuzzy matching
 4. **Calculate Scores** - Weighted scoring across 6 dimensions
 5. **Apply Penalties**:
@@ -141,7 +139,7 @@ GET    /providers/{id}        # Get provider details
 GET    /stats                 # System statistics
 ```
 
-### Verification (SMS)
+### Verification (CALL/SMS)
 ```http
 POST   /verify/start          # Initiate SMS verification
 POST   /verify/webhook        # Twilio webhook handler
@@ -203,7 +201,7 @@ OLLAMA_MODEL=llama3.1:latest
 DEMO_MODE=true                 # Set to false for production
 ```
 
-### Optional (SMS Verification)
+### Optional (CALL/SMS Verification)
 ```bash
 # Twilio Configuration
 TWILIO_SID=your_account_sid
@@ -272,9 +270,8 @@ provider_data_validation/
 └── scripts/
     ├── install.bat                     # Setup automation
     └── start_system.bat                # Launch script
-```
 
----
+```
 
 ## 📝 Mock Data & Test Scenarios
 
@@ -295,23 +292,6 @@ The system includes realistic mock data for testing:
 
 ---
 
-## 🚨 Demo Mode vs Production
-
-### Demo Mode (Default: `DEMO_MODE=true`)
-- ✅ No real SMS sent (free!)
-- ✅ Simulated conversations in UI
-- ✅ All features functional
-- ✅ Safe for hackathons and demos
-- ✅ Instant validation (no API delays)
-
-### Production Mode (`DEMO_MODE=false`)
-- 📱 Real SMS via Twilio
-- 🌐 Webhook processing required
-- 💰 Twilio charges apply
-- 🔐 Valid credentials needed
-- ⏱️ Real-world latency
-
----
 
 ## 🐛 Troubleshooting
 
@@ -344,18 +324,12 @@ conda activate crewai-env
 pip install -r requirements.txt
 ```
 
-### avgConfidence Shows "undefined%"
-- Fixed! The API now properly converts decimal (0.92) to percentage (92%)
-
----
-
 ## 📚 Key Learnings & Design Decisions
 
 1. **Hybrid Validation** - Combining AI with deterministic fallbacks ensures reliability
-2. **Smart SMS Questions** - Only asking about mutable fields (address, hospital) is more logical
-3. **Realistic Scoring** - Weighted dimensions + penalties + variance = believable results
-4. **Demo Mode** - Essential for hackathons to avoid charges and demonstrate functionality
-5. **Phone Verification** - Successful SMS delivery implicitly validates phone number
+2. **Realistic Scoring** - Weighted dimensions + penalties + variance = believable results
+3. **Demo Mode** - Essential for hackathons to avoid charges and demonstrate functionality
+4. **Phone Verification** - Successful SMS delivery implicitly validates phone number
 
 ---
 
