@@ -192,11 +192,7 @@ def validate_provider_data(extracted_data: dict) -> dict:
     # Final confidence with penalties applied
     overall_validation_confidence = max(overall_base - penalties, 0.35)  # Floor at 35%
     
-    # Add some realistic variance (±2%) to avoid identical scores
-    import random
-    random.seed(hash(str(extracted_data)))  # Deterministic randomness
-    variance = random.uniform(-0.02, 0.02)
-    overall_validation_confidence = min(max(overall_validation_confidence + variance, 0.35), 1.0)
+
     
     # Round to percentage (e.g., 0.89 = 89%)
     overall_validation_confidence = round(overall_validation_confidence, 2)

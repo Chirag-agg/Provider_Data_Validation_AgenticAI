@@ -1,10 +1,12 @@
 """
 Verification session storage.
-In-memory store for tracking interactive provider verification conversations.
+In-memory storage for verification sessions.
+In production, replace with a persistent database (PostgreSQL, MongoDB, etc.)
 """
 
-from typing import Dict, Optional
-from .models import VerificationSession
+from typing import Dict, List, Optional
+from datetime import datetime
+from ..models import VerificationSession
 
 # In-memory storage for verification sessions
 verification_sessions: Dict[str, VerificationSession] = {}
@@ -53,9 +55,12 @@ def get_all_sessions() -> Dict[str, VerificationSession]:
     return verification_sessions.copy()
 
 
-def get_provider_sessions(provider_id: str) -> list[VerificationSession]:
+def get_provider_sessions(provider_id: str) -> list:
     """Get all verification sessions for a specific provider."""
-    return [
-        session for session in verification_sessions.values()
-        if session.provider_id == provider_id
-    ]
+    sessions = []
+    for session in verification_sessions.values():
+        # Handle both dict and model objects
+        session_provider_id = session.get('provider_id') if isinstance(session, dict) else session.provider_id
+        if session_provider_id == provider_id:
+            sessions.append(session)
+    return sessions

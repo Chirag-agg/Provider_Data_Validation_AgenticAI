@@ -7,7 +7,7 @@ import os
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
-from .models import VerificationSession, VerificationStatus, VerificationRequest
+from ..models import VerificationSession, VerificationStatus, VerificationRequest
 from . import verification_store
 
 
@@ -77,7 +77,7 @@ def send_verification_sms(phone: str, message: str) -> Optional[str]:
         print(f"[SMS] Attempting to send to: {phone}")
         print(f"[SMS] Message: {message[:100]}...")  # First 100 chars
         
-        from .tools.twilio_tools import SendRealSMSTool
+        from .twilio_tools import SendRealSMSTool
         
         tool = SendRealSMSTool()
         result = tool._run(to=phone, message=message)

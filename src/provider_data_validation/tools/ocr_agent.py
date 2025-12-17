@@ -41,7 +41,7 @@ Instructions:
 
 Extract all names now:"""
         
-        print("  🤖 Sending image to LLaVA...")
+        print("  [LLM] Sending image to LLaVA...")
         
         response = requests.post(
             "http://localhost:11434/api/generate",
@@ -56,7 +56,7 @@ Extract all names now:"""
         )
         
         if response.status_code != 200:
-            print(f"  ✗ Ollama API error: {response.status_code}")
+            print(f"  [ERROR] Ollama API error: {response.status_code}")
             return ""
         
         result = response.json()
@@ -73,7 +73,7 @@ Extract all names now:"""
                 seen.add(line.lower())
         
         raw_dedup = '\n'.join(unique)
-        print(f"  ✓ LLaVA: {len(unique)} names ({len(lines)} total)")
+        print(f"  [SUCCESS] LLaVA: {len(unique)} names ({len(lines)} total)")
         
         # Stage 2: Clean with llama3.1
         cleaned = clean_names_with_llm(raw_dedup)
@@ -81,10 +81,10 @@ Extract all names now:"""
             
             
     except requests.exceptions.ConnectionError:
-        print("  ✗ Could not connect to Ollama. Is it running?")
+        print("  [ERROR] Could not connect to Ollama. Is it running?")
         return ""
     except Exception as e:
-        print(f"  ✗ Vision LLM extraction failed: {e}")
+        print(f"  [ERROR] Vision LLM extraction failed: {e}")
         return ""
 
 
@@ -98,7 +98,7 @@ def clean_names_with_llm(raw_text: str) -> str:
         
         # Get absolute path to mock data
         current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent.parent  # Up 3 levels to project root
+        project_root = current_file.parent.parent.parent.parent  # Up 4 levels to project root (from tools -> package -> src -> root)
         mock_path = project_root / "mock_data" / "npi_registry.json"
         
         print(f"  Loading reference from: {mock_path}")
@@ -109,11 +109,11 @@ def clean_names_with_llm(raw_text: str) -> str:
                 with open(mock_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     reference_names = [p.get("name", "") for p in data.get("providers", [])]
-                print(f"  ✓ Loaded {len(reference_names)} reference names")
+                print(f"  [SUCCESS] Loaded {len(reference_names)} reference names")
             except Exception as e:
-                print(f"  ⚠️ Error loading reference: {e}")
+                print(f"  [WARNING] Error loading reference: {e}")
         else:
-            print(f"  ⚠️ Mock data not found at {mock_path}")
+            print(f"  [WARNING] Mock data not found at {mock_path}")
         
         ref_list = "\n".join(f"- {name}" for name in reference_names) if reference_names else "(No reference available)"
         
@@ -127,8 +127,8 @@ OCR EXTRACTED (may have typos, missing letters, extra letters):
 
 MATCHING RULES:
 1. Match names even if they have typos or missing/extra letters
-2. Match based on similarity: "Prya Patel" → "Dr Priya Patel"
-3. Match if first name OR last name is similar: "Rajsh Iyer" → "Dr Rajesh Iyer"
+2. Match based on similarity: "Prya Patel" -> "Dr Priya Patel"
+3. Match if first name OR last name is similar: "Rajsh Iyer" -> "Dr Rajesh Iyer"
 4. Ignore "Dr" prefix when matching
 5. Be GENEROUS with matching - prioritize recall over precision
 6. If a name is even 60% similar to a reference name, match it
@@ -153,7 +153,7 @@ MATCHED NAMES:
                 "stream": False,
                 "options": {"temperature": 0.1, "num_predict": 500}
             },
-            timeout=30
+            timeout=90
         )
         
         if response.status_code == 200:

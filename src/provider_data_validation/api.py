@@ -508,6 +508,170 @@ async def get_provider_verifications(provider_id: str):
     }
 
 
+@app.post("/verify/omni-webhook")
+async def omni_dimension_webhook(request: Request):
+    """
+    Receive call verification data from Omni Dimension.
+    This webhook is called after each verification call completes.
+    
+    Configure this URL in Omni Dimension:
+    https://your-ngrok-url.ngrok.io/verify/omni-webhook
+    """
+    try:
+        # Parse incoming webhook data from Omni Dimension
+        data = await request.json()
+        
+        print(f"\n[WEBHOOK] Received Omni Dimension webhook: {data.get('call_id')}")
+        
+        # Extract call information
+        call_data = {
+            "call_id": data.get("call_id"),
+            "status": data.get("status", "completed"),
+            "duration": data.get("duration"),
+            "timestamp": data.get("timestamp"),
+            "provider_phone": data.get("phone") or data.get("to"),
+            
+            # Call Summary
+            "callSummary": data.get("call_summary") or data.get("summary"),
+            
+            # Full Conversation
+            "fullConversation": data.get("full_conversation") or data.get("conversation", []),
+            
+            # Sentiment Analysis
+            "sentimentAnalysis": {
+                "overall": data.get("sentiment", {}).get("overall", "Positive"),
+                "confidence": data.get("sentiment", {}).get("confidence", 85),
+                "mood": data.get("sentiment", {}).get("mood", "Cooperative"),
+                "keyEmotions": data.get("sentiment", {}).get("emotions", [])
+            },
+            
+            # Extracted Information
+            "extractedInformation": data.get("extracted_info") or data.get("extracted_information", {})
+        }
+        
+        # Store in verification_store
+        from .tools import verification_store
+        
+        # Find provider by phone number
+        provider_phone = call_data["provider_phone"]
+        provider_id = data.get("provider_id") or data.get("metadata", {}).get("provider_id")
+        
+        # Try to find existing session by provider_id or phone
+        session_id = data.get("session_id")
+        existing_session = None
+        
+        if not session_id:
+            # Search for existing session by phone or provider_id
+            for sid, sess in verification_store.verification_sessions.items():
+                sess_phone = sess.get("phone", "")
+                sess_provider = sess.get("provider_id", "")
+                
+                if provider_phone and provider_phone in sess_phone:
+                    existing_session = sess
+                    session_id = sid
+                    print(f"[INFO] Found existing session by phone: {session_id}")
+                    break
+                elif provider_id and provider_id in sess_provider:
+                    existing_session = sess
+                    session_id = sid
+                    print(f"[INFO] Found existing session by provider_id: {session_id}")
+                    break
+        
+        # Update existing session or create new one
+        if existing_session:
+            # Update existing session
+            existing_session["call_verification"] = call_data
+            existing_session["status"] = "COMPLETED"
+            verification_store.update_session(session_id, existing_session)
+            print(f"[SUCCESS] Updated existing session {session_id} with call data")
+        else:
+            # Create new session directly as a dict
+            import uuid
+            from datetime import datetime
+            
+            session_id = str(uuid.uuid4())
+            simple_session = {
+                "session_id": session_id,
+                "provider_id": provider_id or provider_phone or "unknown",
+                "provider_name": data.get("provider_name", "Unknown Provider"),
+                "phone": provider_phone or "N/A",
+                "status": "COMPLETED",
+                "created_at": datetime.utcnow().isoformat(),
+                "call_verification": call_data
+            }
+            
+            # Store directly in verification_sessions dict
+            verification_store.verification_sessions[session_id] = simple_session
+            if provider_phone:
+                verification_store.phone_to_session[provider_phone] = session_id
+            
+            print(f"[SUCCESS] Created new session {session_id} with call data")
+        
+        return {
+            "success": True,
+            "message": "Call data received and stored",
+            "session_id": session_id,
+            "call_id": call_data["call_id"]
+        }
+        
+    except Exception as e:
+        print(f"[ERROR] Error processing Omni webhook: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@app.get("/verify/call-data/{provider_id}")
+async def get_call_verification(provider_id: str):
+    """Get call verification data (Mocked for Demo)"""
+    # DEMO MODE: Return hardcoded conversation
+    import datetime
+    return {
+        "success": True,
+        "call_verification": {
+            "status": "completed",
+            "duration": "1m 20s",
+            "callId": "demo-call-123",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "callSummary": "Verified provider details. Address updated to Indiranagar, Bangalore. Hospital affiliation updated to Apollo Hospital. Alternate phone number 7123456789 confirmed.",
+            "fullConversation": [
+                {"time": "00:00", "sender": "system", "message": "Hello, this is the automated credential verification assistant calling to confirm your professional practise details. May I confirm that I'm speaking with Doctor R of Meta?"},
+                {"time": "00:05", "sender": "provider", "message": "Yes."},
+                {"time": "00:08", "sender": "system", "message": "Great, thank you. We have detected an address mismatch in our data. Is your practise still at MG Rd Bangalore 560001?"},
+                {"time": "00:15", "sender": "provider", "message": "No."},
+                {"time": "00:18", "sender": "system", "message": "Could you please state the correct address for your practise?"},
+                {"time": "00:25", "sender": "provider", "message": "Yes, it's Indiranagar, Bangalore."},
+                {"time": "00:30", "sender": "system", "message": "Got it. Your verified address is Indiranagar, Bangalore. Our records show an affiliation with Fortis Hospital. Do you still practise there?"},
+                {"time": "00:38", "sender": "provider", "message": "No."},
+                {"time": "00:40", "sender": "system", "message": "Thanks for letting me know. Could you please share your updated hospital affiliation?"},
+                {"time": "00:45", "sender": "provider", "message": "Yes, it's Apollo Hospital."},
+                {"time": "00:50", "sender": "system", "message": "Noted Your updated hospital affiliation is Apollo Hospital. Is there an alternate phone number where administrative teams can reach you?"},
+                {"time": "00:58", "sender": "provider", "message": "Yes."},
+                {"time": "01:00", "sender": "system", "message": "Please provide the alternate phone number for confirmation."},
+                {"time": "01:05", "sender": "provider", "message": "7123456789."},
+                {"time": "01:10", "sender": "system", "message": "Just to confirm, the alternate phone number is 7123456789, right?"},
+                {"time": "01:15", "sender": "provider", "message": "Yes."},
+                {"time": "01:18", "sender": "system", "message": "Thank you. Your verification is now complete. Have a great day."}
+            ],
+            "sentimentAnalysis": {
+                "overall": "Positive",
+                "confidence": 92,
+                "mood": "Cooperative",
+                "keyEmotions": ["Professional", "Patient", "Clear"]
+            },
+            "extractedInformation": {
+                "addressConfirmed": "Indiranagar, Bangalore",
+                "hospitalUpdated": "Apollo Hospital",
+                "verificationsCompleted": "3/3",
+                "correctionsProvided": "2"
+            }
+        }
+    }
+
+
 # ==================== Root ====================
 
 @app.get("/")
