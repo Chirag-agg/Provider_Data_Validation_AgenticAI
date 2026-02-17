@@ -1,0 +1,7 @@
+* text=auto
+*.js eol=lf
+*.jsx eol=lf
+*.mjs eol=lf
+*.json eol=lf
+*.md eol=lf
+.npmrc eol=lf
