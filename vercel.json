@@ -1,6 +1,7 @@
 {
-    "buildCommand": "cd external_frontend && npm run build",
-    "outputDirectory": "external_frontend/dist",
-    "installCommand": "cd external_frontend && npm install",
-    "framework": "vite"
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "installCommand": "npm install",
+    "framework": "vite",
+    "root": "external_frontend"
 }
