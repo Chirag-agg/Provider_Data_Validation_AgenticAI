@@ -21,7 +21,7 @@ where conda >nul 2>&1
 if %errorlevel%==0 (
     conda env list 2>nul | findstr "crewai-env" >nul 2>&1
     if !errorlevel!==0 (
-        set "PYTHON_CMD=conda run --no-banner -n crewai-env python"
+        set "PYTHON_CMD=conda run -n crewai-env python"
         set "ENV_NAME=conda (crewai-env)"
     )
 )

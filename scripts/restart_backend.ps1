@@ -19,7 +19,7 @@ $envName = $null
 if (Get-Command conda -ErrorAction SilentlyContinue) {
     $envList = conda env list 2>$null | Out-String
     if ($envList -match "crewai-env") {
-        $pythonCmd = "conda run --no-banner -n crewai-env python"
+        $pythonCmd = "conda run -n crewai-env python"
         $envName = "conda (crewai-env)"
     }
 }

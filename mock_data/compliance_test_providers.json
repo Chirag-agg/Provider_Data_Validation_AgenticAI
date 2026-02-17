@@ -1,0 +1,243 @@
+{
+    "test_providers": [
+        {
+            "id": "TEST-HIGH-RISK-001",
+            "npi": "9988776655",
+            "full_name": "Dr Shalini Rao",
+            "first_name": "Shalini",
+            "last_name": "Rao",
+            "specialty": "Dermatology",
+            "phone": "+919876543210",
+            "address": "SkinGlow Clinic, Bangalore",
+            "license": "KA-MED-2022-7788",
+            "board_certified": false,
+            "status": "Active",
+            "updated_at": "2026-02-15T00:00:00Z",
+            "test_scenario": "CRITICAL risk - Has sanction match + expired license",
+            "expected_cri_range": "80-100"
+        },
+        {
+            "id": "TEST-CLEAN-001",
+            "npi": "1029384756",
+            "full_name": "Dr Aarav Mehta",
+            "first_name": "Aarav",
+            "last_name": "Mehta",
+            "specialty": "Cardiology",
+            "phone": "+918123456789",
+            "address": "New Life Care Hospital, Delhi",
+            "license": "DL-MED-2024-1234",
+            "board_certified": true,
+            "status": "Active",
+            "updated_at": "2026-02-16T00:00:00Z",
+            "test_scenario": "NO risk - Clean provider with all credentials",
+            "expected_cri_range": "0-10"
+        },
+        {
+            "id": "TEST-MEDIUM-RISK-001",
+            "npi": "7766554433",
+            "full_name": "Dr Meera Krishnan",
+            "first_name": "Meera",
+            "last_name": "Krishnan",
+            "specialty": "General Practice",
+            "phone": "+914012345678",
+            "address": "City Health Center, Hyderabad",
+            "license": "TG-MED-2023-4455",
+            "board_certified": true,
+            "status": "Active",
+            "updated_at": "2026-02-10T00:00:00Z",
+            "test_scenario": "MEDIUM risk - Has sanction match for fraud",
+            "expected_cri_range": "40-60"
+        },
+        {
+            "id": "TEST-FUZZY-MATCH-001",
+            "npi": "4455667799",
+            "full_name": "Dr Anil Kumar",
+            "first_name": "Anil",
+            "last_name": "Kumar",
+            "specialty": "Oncology",
+            "phone": "+919445566778",
+            "address": "Tata Memorial Hospital, Mumbai",
+            "license": "MH-MED-2019-9988",
+            "board_certified": true,
+            "status": "Active",
+            "updated_at": "2026-02-14T00:00:00Z",
+            "test_scenario": "HIGH risk - Fuzzy match to 'Kumar Anil' sanction (name reversed)",
+            "expected_cri_range": "60-80"
+        },
+        {
+            "id": "TEST-MISSING-DATA-001",
+            "npi": "",
+            "full_name": "Dr Rahul Nambiar",
+            "first_name": "Rahul",
+            "last_name": "Nambiar",
+            "specialty": "Pediatrics",
+            "phone": "+919876501234",
+            "address": "Children's Hospital, Kochi",
+            "license": "",
+            "board_certified": false,
+            "status": "Pending",
+            "updated_at": "2025-10-01T00:00:00Z",
+            "test_scenario": "MEDIUM risk - Missing NPI, license, board cert + stale data",
+            "expected_cri_range": "35-50"
+        },
+        {
+            "id": "TEST-SANCTION-SAM-001",
+            "npi": "2233445577",
+            "full_name": "Dr Vikram Singh",
+            "first_name": "Vikram",
+            "last_name": "Singh",
+            "specialty": "Orthopedics",
+            "phone": "+919223344556",
+            "address": "Fortis Hospital, Gurgaon",
+            "license": "HR-MED-2023-3344",
+            "board_certified": true,
+            "status": "Active",
+            "updated_at": "2025-10-15T00:00:00Z",
+            "test_scenario": "HIGH risk - SAM.gov exclusion + stale data",
+            "expected_cri_range": "65-75"
+        },
+        {
+            "id": "TEST-LOW-RISK-001",
+            "npi": "3344556677",
+            "full_name": "Dr Priya Patel",
+            "first_name": "Priya",
+            "last_name": "Patel",
+            "specialty": "Pediatrics",
+            "phone": "+919334455667",
+            "address": "Max Healthcare, Noida",
+            "license": "UP-MED-2020-1122",
+            "board_certified": false,
+            "status": "Active",
+            "updated_at": "2026-02-12T00:00:00Z",
+            "test_scenario": "LOW risk - Only missing board certification",
+            "expected_cri_range": "5-15"
+        },
+        {
+            "id": "TEST-CRITICAL-MULTIPLE-001",
+            "npi": "5544332211",
+            "full_name": "Dr Anjali Desai",
+            "first_name": "Anjali",
+            "last_name": "Desai",
+            "specialty": "Internal Medicine",
+            "phone": "+917912345678",
+            "address": "City Hospital, Ahmedabad",
+            "license": "",
+            "board_certified": false,
+            "status": "Flagged",
+            "updated_at": "2025-09-01T00:00:00Z",
+            "test_scenario": "CRITICAL risk - Fraud sanction + missing credentials + stale data",
+            "expected_cri_range": "90-100"
+        },
+        {
+            "id": "TEST-ABUSE-SANCTION-001",
+            "npi": "6655443322",
+            "full_name": "Dr Rajesh Verma",
+            "first_name": "Rajesh",
+            "last_name": "Verma",
+            "specialty": "Psychiatry",
+            "phone": "+914412345678",
+            "address": "Mind Care Clinic, Chennai",
+            "license": "TN-MED-2021-6677",
+            "board_certified": false,
+            "status": "Active",
+            "updated_at": "2026-02-13T00:00:00Z",
+            "test_scenario": "CRITICAL risk - Patient abuse sanction",
+            "expected_cri_range": "75-90"
+        },
+        {
+            "id": "TEST-LICENSE-REVOKED-001",
+            "npi": "9988776600",
+            "full_name": "Dr Suresh Reddy",
+            "first_name": "Suresh",
+            "last_name": "Reddy",
+            "specialty": "Anesthesiology",
+            "phone": "+918912345678",
+            "address": "Apollo Hospital, Visakhapatnam",
+            "license": "",
+            "board_certified": true,
+            "status": "Suspended",
+            "updated_at": "2026-02-14T00:00:00Z",
+            "test_scenario": "HIGH risk - License revocation sanction + missing license",
+            "expected_cri_range": "70-80"
+        }
+    ],
+    "test_scenarios": {
+        "sanction_testing": {
+            "exact_match": [
+                "TEST-HIGH-RISK-001",
+                "TEST-MEDIUM-RISK-001"
+            ],
+            "fuzzy_match": [
+                "TEST-FUZZY-MATCH-001"
+            ],
+            "sam_gov_exclusion": [
+                "TEST-SANCTION-SAM-001"
+            ],
+            "patient_abuse": [
+                "TEST-ABUSE-SANCTION-001"
+            ],
+            "license_issues": [
+                "TEST-LICENSE-REVOKED-001"
+            ]
+        },
+        "data_quality": {
+            "clean_provider": [
+                "TEST-CLEAN-001"
+            ],
+            "missing_credentials": [
+                "TEST-MISSING-DATA-001"
+            ],
+            "stale_data": [
+                "TEST-SANCTION-SAM-001",
+                "TEST-CRITICAL-MULTIPLE-001"
+            ]
+        },
+        "risk_levels": {
+            "none": [
+                "TEST-CLEAN-001"
+            ],
+            "low": [
+                "TEST-LOW-RISK-001"
+            ],
+            "medium": [
+                "TEST-MEDIUM-RISK-001",
+                "TEST-MISSING-DATA-001"
+            ],
+            "high": [
+                "TEST-FUZZY-MATCH-001",
+                "TEST-SANCTION-SAM-001",
+                "TEST-LICENSE-REVOKED-001"
+            ],
+            "critical": [
+                "TEST-HIGH-RISK-001",
+                "TEST-CRITICAL-MULTIPLE-001",
+                "TEST-ABUSE-SANCTION-001"
+            ]
+        }
+    },
+    "testing_instructions": {
+        "setup": [
+            "1. Load sanction_registry_mock.json into the compliance system",
+            "2. Run compliance checks on each test provider",
+            "3. Verify CRI scores fall within expected_cri_range",
+            "4. Confirm risk_level matches the test_scenario category"
+        ],
+        "api_tests": [
+            "POST /compliance/recalculate/{provider_id} with each test provider",
+            "GET /compliance/check/{provider_id} to verify stored results",
+            "GET /compliance/sanctions/search?name={provider_name} to test fuzzy matching"
+        ],
+        "expected_behaviors": {
+            "fuzzy_matching": "Should catch name variations like 'Kumar Anil' vs 'Anil Kumar'",
+            "threshold_testing": "Test with different similarity thresholds (70%, 80%, 90%)",
+            "multi_factor": "Providers with multiple issues should have cumulative CRI scores"
+        }
+    },
+    "metadata": {
+        "version": "1.0",
+        "created": "2026-02-17T00:00:00Z",
+        "description": "Test providers specifically designed for compliance module testing",
+        "total_scenarios": 10,
+        "coverage": "Covers all risk levels, sanction types, and edge cases"
+    }
+}

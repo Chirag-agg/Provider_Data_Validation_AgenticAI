@@ -3,7 +3,7 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, task, crew
 
-from ...tools.twilio_tools import SendRealSMSTool, CallProviderRealTool
+from ...tools.omni_tools import CallProviderTool
 
 
 @CrewBase
@@ -25,7 +25,7 @@ class NotificationCrew:
             role="Provider Notifier",
             goal="Send SMS or call providers using Twilio tools.",
             backstory="You notify providers using SMS or calls.",
-            tools=[SendRealSMSTool(), CallProviderRealTool()],
+            tools=[CallProviderTool()],
             verbose=True,
             llm=self.ollama_llm,
         )

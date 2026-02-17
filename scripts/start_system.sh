@@ -36,7 +36,7 @@ ENV_NAME=""
 # 1) Check for conda env
 if command -v conda &>/dev/null; then
     if conda env list 2>/dev/null | grep -q "crewai-env"; then
-        PYTHON_CMD="conda run --no-banner -n crewai-env python"
+        PYTHON_CMD="conda run -n crewai-env python"
         ENV_NAME="conda (crewai-env)"
     fi
 fi

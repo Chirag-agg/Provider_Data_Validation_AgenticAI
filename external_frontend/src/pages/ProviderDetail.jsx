@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, CheckCircle, AlertTriangle, Clock, Shield, Send, MessageSquare, PhoneCall } from 'lucide-react';
 import gsap from 'gsap';
 import { startVerification, getVerificationStatus, getProviderVerifications } from '../services/api';
+import CompliancePanel from '../components/CompliancePanel';
 
 const ProviderDetail = () => {
     const { id } = useParams();
@@ -380,6 +381,9 @@ const ProviderDetail = () => {
                     </div>
                 </div>
             )}
+
+            {/* Compliance Intelligence Panel */}
+            <CompliancePanel providerId={provider.id} providerData={provider} />
 
             {/* Issues & Risk Flags */}
             {(provider.issues?.length > 0 || provider.riskFlags?.length > 0 || (provider.licenseInfo?.status && provider.licenseInfo.status !== 'Active')) && (

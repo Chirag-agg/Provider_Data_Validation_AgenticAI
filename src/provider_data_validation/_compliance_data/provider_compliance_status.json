@@ -1,0 +1,376 @@
+[
+  {
+    "provider_id": "f77aa512-0d83-4914-82c2-f72709f9725a",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: License, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T17:51:21.124191"
+  },
+  {
+    "provider_id": "6ea0b851-3810-4c4b-842e-7781ec8486c2",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:15.702804"
+  },
+  {
+    "provider_id": "ef244cce-6cb4-44c5-b517-83a67e964db1",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:25.042523"
+  },
+  {
+    "provider_id": "81966694-5205-41f8-89e8-1d8d0accb57d",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:33.989739"
+  },
+  {
+    "provider_id": "c1be0a9c-50a0-4eef-a22b-ac7fdc2927dc",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:42.317599"
+  },
+  {
+    "provider_id": "31756a43-7681-453c-8953-afd5ad787701",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:50.889637"
+  },
+  {
+    "provider_id": "b3bc46af-bf6c-4005-92ae-b5e6c187c0ea",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:02:59.402228"
+  },
+  {
+    "provider_id": "79744615-17e8-403d-8ae0-1cf285e9996d",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:03:08.097229"
+  },
+  {
+    "provider_id": "78d0995e-4eea-4d38-9b2d-6282adf81fc6",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:03:16.500603"
+  },
+  {
+    "provider_id": "6cb87e4d-5d5e-4e10-848b-c19478d1cb1b",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:03:24.834742"
+  },
+  {
+    "provider_id": "20b1c79d-d5ac-43c6-a5a0-ce10ab1cc4d8",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:03:33.653591"
+  },
+  {
+    "provider_id": "3758c999-1714-43b7-9c67-0357115c5117",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:04:36.537716"
+  },
+  {
+    "provider_id": "3932fa95-423d-4cf2-82d7-d6e3b9585185",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:05:23.314668"
+  },
+  {
+    "provider_id": "8f3cf0d6-e8e0-4888-84ca-df0aad0f3c55",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:06:08.425986"
+  },
+  {
+    "provider_id": "969122d1-bf5a-46f6-a0d3-45a1324b058a",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:07:00.834660"
+  },
+  {
+    "provider_id": "d76e8a2f-5d7f-4dfb-8c97-128ef6faba23",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:07:42.909290"
+  },
+  {
+    "provider_id": "79c63012-e63d-4e93-bade-bd1073c35ea9",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:08:34.818490"
+  },
+  {
+    "provider_id": "b42696cc-30ec-43ec-a8d9-181df8d5de09",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:09:17.368129"
+  },
+  {
+    "provider_id": "b82c361e-503b-475a-91a6-aa229ec3c0e5",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:13:39.806469"
+  },
+  {
+    "provider_id": "1fde34f1-b6a5-4812-bc26-5d55110120d5",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: License, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T17:51:01.904831"
+  },
+  {
+    "provider_id": "934e12bc-9b51-4ff6-ab64-292e6168ab93",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:10.700518"
+  },
+  {
+    "provider_id": "8529081a-81e3-406b-97c4-0df457a0e743",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:19.214082"
+  },
+  {
+    "provider_id": "af1b085d-6cd1-4ecc-8577-80af8578a009",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:28.002974"
+  },
+  {
+    "provider_id": "fe87db9f-2cdc-4954-a943-44717e060f9e",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:36.453230"
+  },
+  {
+    "provider_id": "07ed807c-5c4d-4a99-af6c-87fe9b3be41c",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:44.829023"
+  },
+  {
+    "provider_id": "e2663212-f4b7-46b4-83ad-0e9a4c3da731",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T16:35:53.499966"
+  },
+  {
+    "provider_id": "01845ee0-c4a7-44cb-89f1-7185a4cdee99",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: License, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T17:51:08.413237"
+  },
+  {
+    "provider_id": "8ea1dc47-92d2-4b80-9169-c798765aa936",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:13:25.549147"
+  },
+  {
+    "provider_id": "2231a3e6-71ba-45ba-bd4f-6d64294d64d9",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:14:09.531708"
+  },
+  {
+    "provider_id": "f0b376a5-b6b4-4e1a-abe4-e8664b020df5",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:14:51.507901"
+  },
+  {
+    "provider_id": "ae52a42c-42cc-40c1-ae06-147cbcbc205f",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:15:35.388695"
+  },
+  {
+    "provider_id": "ed936f11-cc24-4b65-8773-428ca1a4c214",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:16:18.305259"
+  },
+  {
+    "provider_id": "2f8cfa7e-e2e7-4e87-8ab4-56c19e74004d",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:16:58.500929"
+  },
+  {
+    "provider_id": "ad5b0bf0-8a56-4be3-ac31-404a9fc98f0d",
+    "cri_score": 20,
+    "risk_level": "LOW",
+    "risk_color": "green",
+    "factors": [
+      "Missing: NPI, Board Certification"
+    ],
+    "sanction_matches": [],
+    "calculated_at": "2026-02-17T18:17:45.532337"
+  }
+]

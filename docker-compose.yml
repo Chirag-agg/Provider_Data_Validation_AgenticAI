@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-  # Ollama LLM Service (GPU optional)
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - provider_network
-
   # FastAPI Backend
   api:
     build:
@@ -28,10 +11,13 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - OLLAMA_MODEL=llama3.1:latest
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://provider_validation:dev_password@postgres:5432/provider_db
+      - CELERY_ENABLED=true
     depends_on:
-      ollama:
+      redis:
         condition: service_healthy
     volumes:
       - ./src:/app/src
@@ -43,9 +29,29 @@ services:
       retries: 3
     networks:
       - provider_network
-    command: python -m uvicorn src.provider_data_validation.api:app --host 0.0.0.0 --port 8000 --reload
+    command: python -m uvicorn src.provider_data_validation.api:app --host 0.0.0.0 --port 8000
 
-  # Frontend (optional - for development)
+  # Celery Worker (optional - enable for background processing)
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3.1:latest
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://provider_validation:dev_password@postgres:5432/provider_db
+      - CELERY_ENABLED=true
+    depends_on:
+      - redis
+    networks:
+      - provider_network
+    command: celery -A src.provider_data_validation.celery_app worker --loglevel=info
+    # Uncomment to enable worker:
+    # profiles:
+    #   - workers
+
+    # Frontend (optional - for development)
   frontend:
     build:
       context: ./external_frontend
@@ -61,7 +67,7 @@ services:
     volumes:
       - ./external_frontend/src:/app/src
 
-  # Redis for task queue (optional - for future async tasks)
+  # Redis for persistence and Celery broker
   redis:
     image: redis:7-alpine
     ports:
@@ -76,9 +82,31 @@ services:
     networks:
       - provider_network
 
+  # PostgreSQL (optional - for persistent session storage)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=provider_validation
+      - POSTGRES_PASSWORD=dev_password
+      - POSTGRES_DB=provider_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U provider_validation" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - provider_network
+    # Uncomment to enable postgres:
+    # profiles:
+    #   - persistence
+
 volumes:
-  ollama_data:
   redis_data:
+  postgres_data:
 
 
 networks:

@@ -1,24 +1,39 @@
 # Provider Data Validation System - Requirements
+# Matches pyproject.toml dependencies
 
-# Core Dependencies
-fastapi>=0.104.0
+# Core Framework
+fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
+pydantic-settings>=2.1.0
 python-multipart>=0.0.6
 
-# CrewAI and AI
-crewai>=0.11.0
-crewai-tools>=0.2.0
+# CrewAI
+crewai[tools]==1.6.1
+
+# Communication
+
+# Database
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.7
 
 # File Processing
-pypdf>=3.17.0
+pypdf>=4.0.0
 openpyxl>=3.1.2
 beautifulsoup4>=4.12.0
+lxml>=4.9.3
+aiofiles>=23.2.1
+rapidfuzz>=3.6.1
 
-# OCR Support
-pytesseract>=0.3.10
-pdf2image>=1.16.3
-Pillow>=10.0.0
+# HTTP / Networking
+requests>=2.31.0
+httpx>=0.25.1
+
+# Background Tasks
+celery>=5.3.4
+redis>=5.0.1
 
 # Utilities
 python-dotenv>=1.0.0
+typing-extensions>=4.8.0
+pytest>=7.0.0

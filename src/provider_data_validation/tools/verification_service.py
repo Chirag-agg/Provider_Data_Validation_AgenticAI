@@ -11,6 +11,20 @@ from ..models import VerificationSession, VerificationStatus, VerificationReques
 from . import verification_store
 
 
+def _ensure_session_model(session_obj):
+    """Ensure we have a VerificationSession model instance (convert dict -> model)."""
+    if session_obj is None:
+        return None
+    if isinstance(session_obj, VerificationSession):
+        return session_obj
+    if isinstance(session_obj, dict):
+        try:
+            return VerificationSession(**session_obj)
+        except Exception:
+            return None
+    return None
+
+
 def format_verification_sms(provider_name: str, data: Dict[str, Any]) -> str:
     """Format the initial verification SMS message.
     Smart mode: Only asks about fields with issues/mismatches.
@@ -70,32 +84,21 @@ Example: Specialty: Cardiology, Phone: +123456"""
 
 def send_verification_sms(phone: str, message: str) -> Optional[str]:
     """
-    Send SMS using Twilio.
-    Returns message SID if successful, None otherwise.
+    Send SMS (demo/mock mode - doesn't actually send).
+    In production with Twilio, replace with actual API call.
+    Returns a mock message SID.
     """
     try:
-        print(f"[SMS] Attempting to send to: {phone}")
+        print(f"[SMS] Demo mode: would send to {phone}")
         print(f"[SMS] Message: {message[:100]}...")  # First 100 chars
         
-        from .twilio_tools import SendRealSMSTool
-        
-        tool = SendRealSMSTool()
-        result = tool._run(to=phone, message=message)
-        
-        print(f"[SMS] Tool result: {result}")
-        
-        # Extract SID from result (format: "SMS sent: SM...")
-        if "SMS sent:" in result:
-            sid = result.split("SMS sent:")[1].strip()
-            print(f"[SMS] Success! SID: {sid}")
-            return sid
-        else:
-            print(f"[SMS] Warning: Unexpected result format: {result}")
-            return None
+        # Generate mock SID
+        import uuid
+        mock_sid = f"SM_{uuid.uuid4().hex[:16]}"
+        print(f"[SMS] Mock SID: {mock_sid}")
+        return mock_sid
     except Exception as e:
-        print(f"[SMS] ERROR: Failed to send SMS: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"[SMS] ERROR: {e}")
         return None
 
 
@@ -138,7 +141,7 @@ def start_verification(request: VerificationRequest, enriched_data: Dict[str, An
         enriched_data: Optional dict with validation results (issues, discrepancies)
     """
     # Check if there's already an active session for this phone
-    existing_session = verification_store.get_session_by_phone(request.phone)
+    existing_session = _ensure_session_model(verification_store.get_session_by_phone(request.phone))
     if existing_session and existing_session.status == VerificationStatus.PENDING_RESPONSE:
         return False, f"Active verification already in progress for this phone number", existing_session
     
@@ -175,8 +178,8 @@ def process_sms_response(from_phone: str, message_body: str) -> tuple[bool, str]
     print(f"[WEBHOOK] Message: {message_body[:100]}")
     
     # Find active session for this phone
-    session = verification_store.get_session_by_phone(from_phone)
-    
+    session = _ensure_session_model(verification_store.get_session_by_phone(from_phone))
+
     if not session:
         print(f"[WEBHOOK] ERROR: No active session found for {from_phone}")
         print(f"[WEBHOOK] Checking all sessions...")

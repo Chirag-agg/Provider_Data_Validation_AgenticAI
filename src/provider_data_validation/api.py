@@ -6,10 +6,13 @@ Main entry point for the API server.
 import os
 import uuid
 from typing import Optional, List
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks, Request, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import asyncio
+
+from .config import settings
+from .logger import logger
 
 from .models import (
     ProviderInput, ValidationResult, BatchValidationRequest, BatchValidationResponse,
@@ -28,13 +31,36 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Add CORS middleware
+# Add CORS middleware (use FRONTEND_URL or configured origins)
+cors_origins = [
+    "http://localhost:5173",      # Vite default dev server
+    "http://localhost:5174",      # Alternative Vite port
+    "http://localhost:3000",      # Alternative frontend port
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",       # Same origin
+]
+
+if settings.FRONTEND_URL:
+    cors_origins.append(settings.FRONTEND_URL)
+
+if settings.CORS_ORIGINS:
+    cors_origins.extend([o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()])
+
+# Remove duplicates
+cors_origins = list(set(cors_origins))
+
+logger.info(f"CORS origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Store for file uploads
@@ -46,16 +72,29 @@ uploaded_files: dict = {}
 @app.get("/health", response_model=HealthCheckResponse)
 async def health_check():
     """Check API health status."""
+    # Best-effort: check Ollama availability
+    if not settings.ENABLE_LLM:
+        ollama_status = "disabled"
+    else:
+        ollama_status = "unknown"
+        try:
+            import httpx
+            resp = httpx.get(settings.OLLAMA_BASE_URL + "/api/tags", timeout=2)
+            ollama_status = "operational" if resp.status_code == 200 else "unavailable"
+        except Exception:
+            ollama_status = "unavailable"
+
     return HealthCheckResponse(
         status="healthy",
         components={
             "api": "operational",
             "validation_service": "operational",
-            "file_processor": "operational"
+            "file_processor": "operational",
+            "ollama": ollama_status
         },
         system_info={
             "workers": 1,
-            "queued_jobs": len(ValidationService.batch_jobs)
+            "queued_jobs": ValidationService.get_batch_count() if hasattr(ValidationService, 'get_batch_count') else 0
         }
     )
 
@@ -64,28 +103,58 @@ async def health_check():
 async def get_stats():
     """Get validation statistics."""
     all_results = []
-    for batch in ValidationService.batch_jobs.values():
-        all_results.extend(batch.results)
-    
+    batches = []
+    if hasattr(ValidationService, 'get_all_results'):
+        batches = ValidationService.get_all_results()
+    else:
+        try:
+            batches = list(ValidationService.batch_jobs.values())
+        except Exception:
+            batches = []
+
+    for batch in batches:
+        # batch may be a dict (from Redis) or a model
+        results = batch.get('results') if isinstance(batch, dict) else getattr(batch, 'results', [])
+        if results:
+            all_results.extend(results)
+
     total = len(all_results)
-    successful = sum(1 for r in all_results if r.validation_status in ["VERIFIED", "PARTIALLY_VERIFIED"])
-    failed = sum(1 for r in all_results if r.validation_status in ["UNVERIFIED", "FLAGGED"])
-    
-    # Collect common issues
+
+    def _status_of(r):
+        return r.get('validation_status') if isinstance(r, dict) else getattr(r, 'validation_status', None)
+
+    def _issues_of(r):
+        return r.get('issues', []) if isinstance(r, dict) else getattr(r, 'issues', [])
+
+    def _confidence_of(r):
+        if isinstance(r, dict):
+            cs = r.get('confidence_scores', {})
+            return cs.get('overall_confidence', 0)
+        else:
+            return getattr(getattr(r, 'confidence_scores', None), 'overall_confidence', 0)
+
+    successful = sum(1 for r in all_results if _status_of(r) in ["VERIFIED", "PARTIALLY_VERIFIED"])
+    failed = sum(1 for r in all_results if _status_of(r) in ["UNVERIFIED", "FLAGGED"])
+
     issues_count = {}
     for result in all_results:
-        for issue in result.issues:
-            issues_count[issue.issue] = issues_count.get(issue.issue, 0) + 1
-    
+        for issue in _issues_of(result):
+            key = issue.get('issue') if isinstance(issue, dict) else getattr(issue, 'issue', None)
+            if not key:
+                continue
+            issues_count[key] = issues_count.get(key, 0) + 1
+
     most_common_issues = sorted(issues_count.items(), key=lambda x: x[1], reverse=True)[:5]
     most_common_issues = [issue for issue, count in most_common_issues]
-    
+
+    avg_conf = sum(_confidence_of(r) for r in all_results) / total if total > 0 else 0
+
     return ValidationStatsResponse(
         total_validations=total,
         successful=successful,
         failed=failed,
         success_rate=successful / total if total > 0 else 0,
-        average_confidence=sum(r.confidence_scores.overall_confidence for r in all_results) / total if total > 0 else 0,
+        average_confidence=avg_conf,
         most_common_issues=most_common_issues
     )
 
@@ -228,7 +297,7 @@ async def upload_file(file: UploadFile = File(...)):
 async def validate_uploaded_file(
     file_id: str,
     background_tasks: BackgroundTasks,
-    priority: str = "normal"
+    priority: str = Query("normal")
 ):
     """
     Validate all providers from an uploaded file.
@@ -329,6 +398,8 @@ async def monitor_drift(provider_name: str):
     Monitor credential drift for a provider by comparing current vs historical data.
     """
     try:
+        if not settings.ENABLE_LLM:
+            raise HTTPException(status_code=503, detail="LLM features disabled in this deployment")
         from .crews.drift_monitoring_crew import DriftMonitoringCrew
         
         # Create crew and pass provider_name as input
@@ -380,26 +451,34 @@ async def start_provider_verification(request: VerificationRequest):
         # Try to get validation results for this provider to identify issues
         validation_data = None
         try:
-            # Check if we have validation results for this provider
-            for batch in ValidationService.batch_jobs.values():
-                for result in batch.results:
-                    if result.provider_id == request.provider_id:
+            # Best-effort: load persisted batches if available
+            batches = ValidationService.get_all_results() if hasattr(ValidationService, 'get_all_results') else list(ValidationService.batch_jobs.values())
+            for batch in batches:
+                results = batch.get('results') if isinstance(batch, dict) else getattr(batch, 'results', [])
+                for result in results:
+                    rid = result.get('provider_id') if isinstance(result, dict) else getattr(result, 'provider_id', None)
+                    if rid == request.provider_id:
                         # Extract issues and discrepancies from validation
+                        issues = result.get('issues') if isinstance(result, dict) else getattr(result, 'issues', [])
                         validation_data = {
-                            'issues': [issue.issue for issue in result.issues] if result.issues else [],
+                            'issues': [i.get('issue') if isinstance(i, dict) else getattr(i, 'issue', '') for i in issues] if issues else [],
                             'discrepancies': {},
                         }
                         # Check for phone mismatch
-                        if result.input_data.get('phone') != result.verified_phone:
+                        input_phone = result.get('input_data', {}).get('phone') if isinstance(result, dict) else result.input_data.get('phone')
+                        verified_phone = result.get('verified_phone') if isinstance(result, dict) else getattr(result, 'verified_phone', None)
+                        if input_phone != verified_phone:
                             validation_data['discrepancies']['phone'] = {
-                                'old_value': result.input_data.get('phone', ''),
-                                'new_value': result.verified_phone or ''
+                                'old_value': input_phone or '',
+                                'new_value': verified_phone or ''
                             }
                         # Check for specialty mismatch
-                        if result.input_data.get('specialty') != result.verified_specialty:
+                        input_spec = result.get('input_data', {}).get('specialty') if isinstance(result, dict) else result.input_data.get('specialty')
+                        verified_spec = result.get('verified_specialty') if isinstance(result, dict) else getattr(result, 'verified_specialty', None)
+                        if input_spec != verified_spec:
                             validation_data['discrepancies']['specialty'] = {
-                                'old_value': result.input_data.get('specialty', ''),
-                                'new_value': result.verified_specialty or ''
+                                'old_value': input_spec or '',
+                                'new_value': verified_spec or ''
                             }
                         break
         except Exception as e:
@@ -453,10 +532,25 @@ async def verification_sms_webhook(request: Request):
         form_data = await request.form()
         from_phone = form_data.get("From", "")
         message_body = form_data.get("Body", "")
-        
+
+        # If Twilio auth token is configured, validate signature
+        try:
+            signature = request.headers.get('X-Twilio-Signature') or request.headers.get('x-twilio-signature')
+            if settings.TWILIO_AUTH_TOKEN and signature:
+                from twilio.request_validator import RequestValidator
+                validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
+                # FastAPI request.url contains the full URL
+                valid = validator.validate(str(request.url), dict(form_data), signature)
+                if not valid:
+                    raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Twilio signature validation skipped/failed: {e}")
+
         if not from_phone or not message_body:
             raise HTTPException(status_code=400, detail="Missing From or Body in webhook")
-        
+
         # Process the response
         success, message = process_sms_response(from_phone, message_body)
         
@@ -562,10 +656,11 @@ async def omni_dimension_webhook(request: Request):
         
         if not session_id:
             # Search for existing session by phone or provider_id
-            for sid, sess in verification_store.verification_sessions.items():
+            all_sessions = verification_store.get_all_sessions()
+            for sid, sess in all_sessions.items():
                 sess_phone = sess.get("phone", "")
                 sess_provider = sess.get("provider_id", "")
-                
+
                 if provider_phone and provider_phone in sess_phone:
                     existing_session = sess
                     session_id = sid
@@ -582,7 +677,8 @@ async def omni_dimension_webhook(request: Request):
             # Update existing session
             existing_session["call_verification"] = call_data
             existing_session["status"] = "COMPLETED"
-            verification_store.update_session(session_id, existing_session)
+            # verification_store.update_session accepts a session dict or model
+            verification_store.update_session(existing_session)
             print(f"[SUCCESS] Updated existing session {session_id} with call data")
         else:
             # Create new session directly as a dict
@@ -600,10 +696,8 @@ async def omni_dimension_webhook(request: Request):
                 "call_verification": call_data
             }
             
-            # Store directly in verification_sessions dict
-            verification_store.verification_sessions[session_id] = simple_session
-            if provider_phone:
-                verification_store.phone_to_session[provider_phone] = session_id
+            # Store using verification_store API
+            verification_store.create_session(simple_session)
             
             print(f"[SUCCESS] Created new session {session_id} with call data")
         
@@ -672,6 +766,79 @@ async def get_call_verification(provider_id: str):
     }
 
 
+# ==================== Compliance Intelligence ====================
+
+@app.get("/compliance/ingest")
+async def ingest_sanctions():
+    """Trigger sanction registry ingestion from OIG and SAM.gov."""
+    try:
+        from .compliance.sanction_ingestion import ingest_sanctions as run_ingest
+        result = await run_ingest()
+        return {"success": True, "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+
+
+@app.get("/compliance/check/{provider_id}")
+async def check_provider_compliance(provider_id: str):
+    """Get compliance status for a specific provider. Auto-calculates if not found."""
+    try:
+        status = ValidationService.get_provider_compliance_status(provider_id)
+        if status:
+            return {"success": True, "data": status}
+        
+        # If not found, return empty state with instructions
+        return {
+            "success": True, 
+            "data": {
+                "provider_id": provider_id,
+                "cri_score": 0,
+                "risk_level": "UNKNOWN",
+                "risk_color": "gray",
+                "factors": [],
+                "sanction_matches": [],
+                "calculated_at": None,
+                "message": "Compliance status not yet calculated. Use POST /compliance/recalculate/{provider_id} to calculate."
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/compliance/recalculate/{provider_id}")
+async def recalculate_compliance(provider_id: str, provider_data: Optional[dict] = Body(None)):
+    """Recalculate compliance risk for a provider. Accepts optional provider data."""
+    try:
+        # If no provider data provided, create minimal dataset
+        if not provider_data:
+            provider_data = {
+                "id": provider_id,
+                "full_name": "Unknown Provider",
+                "npi": "",
+                "license": "",
+                "board_certified": False
+            }
+        else:
+            provider_data["id"] = provider_id
+        
+        result = ValidationService.recalculate_provider_compliance(provider_id, provider_data)
+        return {"success": True, "data": result}
+    except Exception as e:
+        logger.error(f"Compliance recalculation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recalculation failed: {str(e)}")
+
+
+@app.get("/compliance/sanctions/search")
+async def search_sanctions(name: str, threshold: int = 80):
+    """Search sanction registry for a provider name."""
+    try:
+        from .compliance.sanction_checker import check_sanctions
+        matches = check_sanctions(name, threshold)
+        return {"success": True, "matches": matches}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== Root ====================
 
 @app.get("/")
@@ -695,7 +862,11 @@ async def root():
             "upload_file": "POST /upload",
             "validate_file": "POST /upload/{file_id}/validate",
             "get_provider": "GET /validate/{provider_id}",
-            "drift_monitor": "POST /drift-monitor"
+            "drift_monitor": "POST /drift-monitor",
+            "compliance_ingest": "GET /compliance/ingest",
+            "compliance_check": "GET /compliance/check/{provider_id}",
+            "compliance_recalculate": "POST /compliance/recalculate/{provider_id}",
+            "sanctions_search": "GET /compliance/sanctions/search"
         }
     }
 
