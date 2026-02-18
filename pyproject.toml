@@ -26,6 +26,7 @@ dependencies = [
 ]
 
 [project.scripts]
+app = "provider_data_validation.api:app"
 kickoff = "provider_data_validation.main:kickoff"
 run_crew = "provider_data_validation.main:kickoff"
 plot = "provider_data_validation.main:plot"
