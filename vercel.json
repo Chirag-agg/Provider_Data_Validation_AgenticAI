@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd external_frontend && npm ci && npm run build",
+  "outputDirectory": "external_frontend/dist",
+  "installCommand": "cd external_frontend && npm ci --prefer-offline --no-audit",
+  "framework": null
+}
